@@ -2,14 +2,21 @@ package jp.cyberagent.appzone
 
 import org.scalatra._
 import scalate.ScalateSupport
+import org.scalatra.servlet.FileUploadSupport
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.mongodb.MongoDB
 import net.liftweb.mongodb.DefaultMongoIdentifier
 import net.liftweb.mongodb.Upsert
 import com.mongodb._
+import com.mongodb.BasicDBObjectBuilder
+import java.io.FileWriter
+import java.io.FileOutputStream
+import java.io.FileOutputStream
+import java.io.File
+import com.mongodb.gridfs.GridFS
 
-class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers {
+class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport {
 
   MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "appzone")
 
@@ -25,12 +32,41 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     Json(app.asJValue)
   }
 
-  get("/app/:id"){
+  get("/app/:id") {
     val res = App.find(("id" -> params("id")))
-    if (res.isEmpty) 
+    if (res.isEmpty)
       resourceNotFound()
     else
       Json(res.get.asJValue)
+  }
+
+  // TODO add /app/:id/android/dev
+  post("/app/:id/android") {
+    fileParams.get("apk") match {
+      case Some(file) =>
+        val input = file.getInputStream
+
+        MongoDB.use(DefaultMongoIdentifier) { db =>
+          val fs = new GridFS(db)
+          val fileName = params("id") + "/android.apk"
+          fs.remove(fileName)
+          val inputFile = fs.createFile(input)
+          inputFile.setFilename(fileName)
+          inputFile.setContentType(file.contentType.getOrElse("application/octet-stream"))
+          inputFile.save
+        }
+                
+        val query = BasicDBObjectBuilder.start
+          .append("id", params("id")).get
+        val update = BasicDBObjectBuilder.start
+          .append("$set", BasicDBObjectBuilder.start
+            .append("dev.android", true).get).get
+        App.update(query, update)
+        
+        Json(App.find(("id" -> params("id"))).get.asJValue)
+      case None =>
+        BadRequest()
+    }
   }
 
   notFound {
