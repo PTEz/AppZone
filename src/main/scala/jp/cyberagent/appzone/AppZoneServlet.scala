@@ -25,6 +25,14 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     Json(app.asJValue)
   }
 
+  get("/app/:id"){
+    val res = App.find(("id" -> params("id")))
+    if (res.isEmpty) 
+      resourceNotFound()
+    else
+      Json(res.get.asJValue)
+  }
+
   notFound {
     // remove content type in case it was set through an action
     contentType = null
