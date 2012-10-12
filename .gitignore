@@ -2,4 +2,6 @@
 target/
 /.lib/
 
-Vagrantfile
+.cache
+.classpath
+.project

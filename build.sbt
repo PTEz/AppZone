@@ -11,7 +11,7 @@ seq(webSettings :_*)
 classpathTypes ~= (_ + "orbit")
 
 libraryDependencies ++= Seq(
-  "org.mongodb" %% "casbah" % "2.4.1",
+  "net.liftweb" %% "lift-mongodb-record" % "2.5-M1",
   "net.liftweb" %% "lift-json" % "2.5-M1",
   "net.liftweb" %% "lift-json-ext" % "2.5-M1",
   "org.scalatra" % "scalatra" % "2.1.1",

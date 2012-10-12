@@ -2,24 +2,27 @@ package jp.cyberagent.appzone
 
 import org.scalatra._
 import scalate.ScalateSupport
-import com.mongodb.casbah.Imports._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
+import net.liftweb.mongodb.MongoDB
+import net.liftweb.mongodb.DefaultMongoIdentifier
+import net.liftweb.mongodb.Upsert
+import com.mongodb._
 
-class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers{
+class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers {
 
-  val apps = MongoConnection()("appzone")("apps")
+  MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "appzone")
 
-  get("/") {
-    val builder = MongoDBObject.newBuilder
-    builder += "foo" -> "bar"
-    builder += "x" -> "y"
-    builder += ("pie" -> 3.14)
-    builder += ("spam" -> "eggs", "mmm" -> "bacon")
-    val newObj = builder.result
-    apps += newObj
+  get("/apps") {
+    Json(App.findAll.map(p => p.asJValue))
+  }
 
-    Json(new App("hello"))
+  post("/app") {
+    val app = App.createRecord
+    app.id.set(params.get("id").getOrElse(""))
+    app.name.set(params.get("name").getOrElse(""))
+    App.update(("id" -> app.id.asJValue), app, Upsert)
+    Json(app.asJValue)
   }
 
   notFound {
