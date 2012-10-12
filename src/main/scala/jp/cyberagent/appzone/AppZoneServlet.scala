@@ -60,7 +60,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
           .append("id", params("id")).get
         val update = BasicDBObjectBuilder.start
           .append("$set", BasicDBObjectBuilder.start
-            .append("dev.android", true).get).get
+            .append("develop.android", true).get).get
         App.update(query, update)
         
         Json(App.find(("id" -> params("id"))).get.asJValue)
