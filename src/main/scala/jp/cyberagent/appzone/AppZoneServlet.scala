@@ -12,9 +12,12 @@ import com.mongodb._
 import com.mongodb.BasicDBObjectBuilder
 import java.io.FileWriter
 import java.io.FileOutputStream
-import java.io.FileOutputStream
 import java.io.File
 import com.mongodb.gridfs.GridFS
+import net.liftweb.common.Empty
+import net.liftweb.common.Full
+import java.util.Date
+import scala.Console
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport {
 
@@ -40,7 +43,6 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       Json(res.get.asJValue)
   }
 
-  // TODO add /app/:id/android/dev
   post("/app/:id/android") {
     fileParams.get("apk") match {
       case Some(file) =>
@@ -55,15 +57,19 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
           inputFile.setContentType(file.contentType.getOrElse("application/octet-stream"))
           inputFile.save
         }
-                
-        val query = BasicDBObjectBuilder.start
-          .append("id", params("id")).get
-        val update = BasicDBObjectBuilder.start
-          .append("$set", BasicDBObjectBuilder.start
-            .append("develop.android", true).get).get
-        App.update(query, update)
-        
-        Json(App.find(("id" -> params("id"))).get.asJValue)
+        val appRes = App.find(("id" -> params("id")))
+        appRes match {
+          case Full(app) => {
+            val record = AndroidEntry.createRecord
+            record.version.set("1.0")
+            record.versionCode.set(1)
+            record.setDateToNow
+            app.android.set(record)
+            App.update(("id" -> params("id")), app)
+            Json(app.asJValue)
+          }
+          case _ => resourceNotFound()
+        }
       case None =>
         BadRequest()
     }
