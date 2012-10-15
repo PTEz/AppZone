@@ -28,23 +28,23 @@ case class App private() extends MongoRecord[App] {
   object name extends StringField(this, 20)
   object description extends StringField(this, 255) { override def optional_? = true }
 
-  object android extends BsonRecordField(this, AndroidEntry) { override def optional_? = true }
-  object ios extends BsonRecordField(this, AndroidEntry) { override def optional_? = true }
+  object android extends BsonRecordField(this, AppPlatformEntry) { override def optional_? = true }
+  object ios extends BsonRecordField(this, AppPlatformEntry) { override def optional_? = true }
 }
 
 object App extends App with MongoMetaRecord[App]
 
 /////////////////////
-class AndroidEntry private() extends BsonRecord[AndroidEntry] {
-  def meta = AndroidEntry
+class AppPlatformEntry private() extends BsonRecord[AppPlatformEntry] {
+  def meta = AppPlatformEntry
   
   object version extends StringField(this, 255)
   object versionCode extends IntField(this, 0)
   object lastUpdateDate extends StringField(this, 24)
   
-  def setDateToNow() = lastUpdateDate.set(AndroidEntry.DATE_FORMAT.format(new Date))
+  def setDateToNow() = lastUpdateDate.set(AppPlatformEntry.DATE_FORMAT.format(new Date))
   def incrementVersionCode() = versionCode.set(versionCode.get + 1)
 }
-object AndroidEntry extends AndroidEntry with BsonMetaRecord[AndroidEntry] {
+object AppPlatformEntry extends AppPlatformEntry with BsonMetaRecord[AppPlatformEntry] {
   val DATE_FORMAT = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
 }

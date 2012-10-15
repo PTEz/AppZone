@@ -18,6 +18,14 @@ import java.io.FileOutputStream
 import java.io.File
 import java.util.Date
 import net.liftweb.util.Props
+import org.scalatra.BadRequest
+import java.io.InputStream
+import org.scalatra.servlet.FileItem
+import net.liftweb.http.RedirectResponse
+import java.net.URLEncoder
+import java.lang.String
+import java.io.ByteArrayInputStream
+import scala.io.Source
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport {
 
@@ -42,9 +50,9 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   get("/app/:id/android") {
+    val appId = params("id")
     MongoDB.use(DefaultMongoIdentifier) { db =>
       val fs = new GridFS(db)
-      val appId = params("id")
       val file = fs.findOne(appId + "/android.apk")
       if (file != null) {
         response.setHeader("Content-Type", "application/vnd.android.package-archive")
@@ -61,20 +69,11 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     val appId = params("id")
     fileParams.get("apk") match {
       case Some(file) =>
-        val input = file.getInputStream
-        MongoDB.use(DefaultMongoIdentifier) { db =>
-          val fs = new GridFS(db)
-          val fileName = appId+ "/android.apk"
-          fs.remove(fileName)
-          val inputFile = fs.createFile(input)
-          inputFile.setFilename(fileName)
-          inputFile.setContentType(file.contentType.getOrElse("application/octet-stream"))
-          inputFile.save
-        }
+        storeFile(file, appId + "/android.apk")
         val appRes = App.find(("id" -> appId))
         appRes match {
           case Full(app) => {
-            val record: AndroidEntry = app.android.valueBox.openOr(AndroidEntry.createRecord)
+            val record: AppPlatformEntry = app.android.valueBox.openOr(AppPlatformEntry.createRecord)
             record.version.set(params.getOrElse("version", "NOT SET"))
             record.incrementVersionCode
             record.setDateToNow
@@ -85,7 +84,74 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
           case _ => resourceNotFound()
         }
       case None =>
-        BadRequest()
+        BadRequest("apk (file) parameter required")
+    }
+  }
+
+  post("/app/:id/ios") {
+    val appId = params("id")
+    fileParams.get("ipa") match {
+      case Some(ipaFile) =>
+        fileParams.get("manifest") match {
+          case Some(manifestFile) =>
+            storeFile(ipaFile, appId + "/ios.ipa")
+            storeFile(manifestFile, appId + "/ios.manifest")
+            val appRes = App.find(("id" -> appId))
+            appRes match {
+              case Full(app) => {
+                val record: AppPlatformEntry = app.ios.valueBox.openOr(AppPlatformEntry.createRecord)
+                record.version.set(params.getOrElse("version", "NOT SET"))
+                record.incrementVersionCode
+                record.setDateToNow
+                app.ios.set(record)
+                App.update(("id" -> appId), app)
+                Json(app.asJValue)
+              }
+              case _ => resourceNotFound()
+            }
+          case _ => BadRequest("manifest (file) parameter required")
+        }
+      case None =>
+        BadRequest("ipa (file) parameter required")
+    }
+  }
+
+  get("/app/:id/ios") {
+    val url = URLEncoder.encode(request.getRequestURL().toString() + ".manifest", "UTF-8");
+    redirect("itms-services://?action=download-manifest&url=" + url)
+  }
+
+  get("/app/:id/ios.manifest") {
+    val appId = params("id")
+    MongoDB.use(DefaultMongoIdentifier) { db =>
+      val fs = new GridFS(db)
+      val file = fs.findOne(appId + "/ios.manifest")
+      if (file != null) {
+        response.setHeader("Content-Type", "text/xml")
+        val content = Source.fromInputStream(file.getInputStream()).getLines.mkString("\n")
+        val url = request.getRequestURL().toString
+        val contentNew = """<string>.*\.ipa</string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf(".")) + ".ipa</string>")
+        val input = new ByteArrayInputStream(contentNew.getBytes("UTF-8"));
+        org.scalatra.util.io.copy(input, response.getOutputStream)
+      } else {
+        resourceNotFound()
+      }
+    }
+  }
+
+  get("/app/:id/ios.ipa") {
+    val appId = params("id")
+    MongoDB.use(DefaultMongoIdentifier) { db =>
+      val fs = new GridFS(db)
+      val file = fs.findOne(appId + "/ios.ipa")
+      if (file != null) {
+        response.setHeader("Content-Type", "application/octet-stream")
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + appId + ".ipa\"")
+        response.setHeader("Content-Length", file.getLength().toString)
+        org.scalatra.util.io.copy(file.getInputStream(), response.getOutputStream)
+      } else {
+        resourceNotFound()
+      }
     }
   }
 
@@ -97,5 +163,17 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       contentType = "text/html"
       layoutTemplate(path)
     } orElse serveStaticResource() getOrElse resourceNotFound()
+  }
+
+  def storeFile(file: FileItem, fileName: String) {
+    val input = file.getInputStream
+    MongoDB.use(DefaultMongoIdentifier) { db =>
+      val fs = new GridFS(db)
+      fs.remove(fileName)
+      val inputFile = fs.createFile(input)
+      inputFile.setFilename(fileName)
+      inputFile.setContentType(file.contentType.getOrElse("application/octet-stream"))
+      inputFile.save
+    }
   }
 }
