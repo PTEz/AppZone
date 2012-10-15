@@ -43,29 +43,44 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       Json(res.get.asJValue)
   }
 
+  get("/app/:id/android") {
+    MongoDB.use(DefaultMongoIdentifier) { db =>
+      val fs = new GridFS(db)
+      val appId = params("id")
+      val file = fs.findOne(appId + "/android.apk")
+      if (file != null) {
+        response.setHeader("Content-Type", "application/vnd.android.package-archive")
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + appId + ".apk\"")
+        org.scalatra.util.io.copy(file.getInputStream(), response.getOutputStream)
+      } else {
+        resourceNotFound()
+      }
+    }
+  }
+
   post("/app/:id/android") {
+    val appId = params("id")
     fileParams.get("apk") match {
       case Some(file) =>
         val input = file.getInputStream
-
         MongoDB.use(DefaultMongoIdentifier) { db =>
           val fs = new GridFS(db)
-          val fileName = params("id") + "/android.apk"
+          val fileName = appId+ "/android.apk"
           fs.remove(fileName)
           val inputFile = fs.createFile(input)
           inputFile.setFilename(fileName)
           inputFile.setContentType(file.contentType.getOrElse("application/octet-stream"))
           inputFile.save
         }
-        val appRes = App.find(("id" -> params("id")))
+        val appRes = App.find(("id" -> appId))
         appRes match {
           case Full(app) => {
-            val record = AndroidEntry.createRecord
-            record.version.set("1.0")
-            record.versionCode.set(1)
+            val record: AndroidEntry = app.android.valueBox.openOr(AndroidEntry.createRecord)
+            record.version.set(params.getOrElse("version", "NOT SET"))
+            record.incrementVersionCode
             record.setDateToNow
             app.android.set(record)
-            App.update(("id" -> params("id")), app)
+            App.update(("id" -> appId), app)
             Json(app.asJValue)
           }
           case _ => resourceNotFound()

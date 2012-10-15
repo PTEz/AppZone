@@ -33,3 +33,12 @@ Response:
       "id": "test",
       "name": "Test Application"
     }
+    
+## GET /app/:id/android
+Returns the .apk for android
+
+## POST /app/:id/android
+Parameters:
+
+* apk: the android apk file
+* version: the string representation of current version

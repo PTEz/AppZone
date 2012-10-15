@@ -39,10 +39,11 @@ class AndroidEntry private() extends BsonRecord[AndroidEntry] {
   def meta = AndroidEntry
   
   object version extends StringField(this, 255)
-  object versionCode extends IntField(this, 1)
+  object versionCode extends IntField(this, 0)
   object lastUpdateDate extends StringField(this, 24)
   
   def setDateToNow() = lastUpdateDate.set(AndroidEntry.DATE_FORMAT.format(new Date))
+  def incrementVersionCode() = versionCode.set(versionCode.get + 1)
 }
 object AndroidEntry extends AndroidEntry with BsonMetaRecord[AndroidEntry] {
   val DATE_FORMAT = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
