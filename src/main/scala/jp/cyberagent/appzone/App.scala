@@ -46,5 +46,5 @@ class AndroidEntry private() extends BsonRecord[AndroidEntry] {
   def incrementVersionCode() = versionCode.set(versionCode.get + 1)
 }
 object AndroidEntry extends AndroidEntry with BsonMetaRecord[AndroidEntry] {
-  val DATE_FORMAT = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+  val DATE_FORMAT = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
 }

@@ -51,6 +51,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       if (file != null) {
         response.setHeader("Content-Type", "application/vnd.android.package-archive")
         response.setHeader("Content-Disposition", "attachment; filename=\"" + appId + ".apk\"")
+        response.setHeader("Content-Length", file.getLength().toString)
         org.scalatra.util.io.copy(file.getInputStream(), response.getOutputStream)
       } else {
         resourceNotFound()
