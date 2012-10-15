@@ -1,8 +1,10 @@
 package jp.cyberagent.appzone
 
 import org.scalatra._
-import scalate.ScalateSupport
 import org.scalatra.servlet.FileUploadSupport
+import scalate.ScalateSupport
+import net.liftweb.common.Empty
+import net.liftweb.common.Full
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.mongodb.MongoDB
@@ -10,14 +12,11 @@ import net.liftweb.mongodb.DefaultMongoIdentifier
 import net.liftweb.mongodb.Upsert
 import com.mongodb._
 import com.mongodb.BasicDBObjectBuilder
+import com.mongodb.gridfs.GridFS
 import java.io.FileWriter
 import java.io.FileOutputStream
 import java.io.File
-import com.mongodb.gridfs.GridFS
-import net.liftweb.common.Empty
-import net.liftweb.common.Full
 import java.util.Date
-import scala.Console
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport {
 
