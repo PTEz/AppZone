@@ -17,10 +17,9 @@ import java.io.FileWriter
 import java.io.FileOutputStream
 import java.io.File
 import java.util.Date
+import net.liftweb.util.Props
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport {
-
-  MongoDB.defineDb(DefaultMongoIdentifier, new Mongo, "appzone")
 
   get("/apps") {
     Json(App.findAll.map(p => p.asJValue))
