@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AppZone</title>
+  <meta name="viewport" content="width=device-width">
+  <!-- TODO: minify and make one for production -->
+  <link rel="stylesheet" href="css/base.css"/>
+  <link rel="stylesheet" href="css/appzone.css"/>
+</head>
+<body>
+  <div id="appzoneapp">
+    <h1>AppZone</h1>
+    <ul id="app-list"></ul>
+  </div>
+
+  <!-- Templates -->
+
+  <script type="text/template" id="app-template">
+    <div class="app">
+      <label class="name"><%- name %></label>
+      <% if (typeof(android) != "undefined") { %>
+      <div class="unit android">
+        <a>Android</a>
+        <label class="version"><%- android.version %></label>
+        <label class="versionCode"><%- android.versionCode %></label>
+        <label class="lastUpdateDate"><%- moment(new Date(android.lastUpdateDate)).fromNow() %></label>
+      </div>
+      <% } %>
+      <% if (typeof(ios) != "undefined") { %>
+      <div class="unit ios">
+        <a target="_blank">iOS</a>
+        <label class="version"><%- ios.version %></label>
+        <label class="versionCode"><%- ios.versionCode %></label>
+        <label class="lastUpdateDate"><%- moment(new Date(ios.lastUpdateDate)).fromNow() %></label>
+      </div>
+      <% } %>
+    </div>
+  </script>
+
+  <!-- TODO: make script to remove all them and add as one minified one for production -->
+  <script src="js/zepto.js"></script>
+  <script src="js/underscore.js"></script>
+  <script src="js/backbone.js"></script>
+  <script src="js/appzone.js"></script>
+  <script src="js/moment.js"></script>
+</body>
+</html>

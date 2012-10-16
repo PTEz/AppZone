@@ -27,7 +27,7 @@ import java.lang.String
 import java.io.ByteArrayInputStream
 import scala.io.Source
 
-class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport {
+class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport with CorsSupport {
 
   get("/apps") {
     Json(App.findAll.map(p => p.asJValue))
