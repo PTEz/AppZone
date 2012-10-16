@@ -1,6 +1,6 @@
 /*global Backbone,_ */
 (function() {
-var SERVER = 'http://172.19.37.164:8080/';
+var SERVER = 'http://appzone-api.pes.ch/';
 var AppItem = Backbone.Model.extend({
   clear: function() {
     this.destroy();
