@@ -155,6 +155,21 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     }
   }
 
+  post("/app/:id/feedback") {
+    storeFeedback(params("id"), params("type"), params("feedback"))
+  }
+  
+  post("/app/:id/android/feedback") {
+    storeFeedback(params("id"), "android", params("feedback"))
+  }
+  post("/app/:id/ios/feedback") {
+    storeFeedback(params("id"), "ios", params("feedback"))
+  }
+
+  get("/app/:id/feedback") {
+    Json(Feedback.findAll(("appId" -> params("id"))).map(p => p.asJValue))
+  }
+
   notFound {
     // remove content type in case it was set through an action
     contentType = null
@@ -175,5 +190,14 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       inputFile.setContentType(file.contentType.getOrElse("application/octet-stream"))
       inputFile.save
     }
+  }
+
+  def storeFeedback(id: String, appType: String, feedback: String) = {
+    val feedbackRecord = Feedback.createRecord
+    feedbackRecord.appId.set(id)
+    feedbackRecord.appType.set(appType)
+    feedbackRecord.feedback.set(feedback)
+    feedbackRecord.save
+    Json(feedbackRecord.asJValue)
   }
 }

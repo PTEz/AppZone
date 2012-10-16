@@ -24,7 +24,7 @@ import net.liftweb.json.DateFormat
 case class App private() extends MongoRecord[App] {
   def meta = App
 
-  object id extends StringField(this, 15)
+  object id extends StringField(this, 20)
   object name extends StringField(this, 20)
   object description extends StringField(this, 255) { override def optional_? = true }
 
