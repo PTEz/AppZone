@@ -42,3 +42,14 @@ Parameters:
 
 * apk: the android apk file
 * version: the string representation of current version
+
+## GET /app/:id/ios
+forwards to the correct ```itms-services://?action=download-manifest?url=...``` 
+url.
+
+## POST /app/:id/ios
+Parameters:
+
+* ipa: the ipa file
+* manifest: the manifest file
+* version: the string representation of current version
