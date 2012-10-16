@@ -1,7 +1,2 @@
+# Mac OS X
 .DS_Store
-target/
-/.lib/
-
-.cache
-.classpath
-.project
