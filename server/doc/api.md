@@ -60,5 +60,13 @@ Returns the feedback for given app
 ## POST /app/:id/android/feedback
 Post a feedback for the android app with given id
 
+Parameters:
+
+* feedback: The feedback text
+
 ## POST /app/:id/ios/feedback
 Post a feedback for the ios app with given id
+
+Parameters:
+
+* feedback: The feedback text
