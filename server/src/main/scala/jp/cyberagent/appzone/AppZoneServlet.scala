@@ -167,7 +167,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   get("/app/:id/feedback") {
-    Json(Feedback.findAll(("appId" -> params("id"))).map(p => p.asJValue))
+    Json(Feedback.findAll(("appId" -> params("id")), ("date" -> -1)).map(p => p.asJValue))
   }
 
   notFound {
