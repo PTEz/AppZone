@@ -2,6 +2,7 @@
 (function() {
 var SERVER = 'http://appzone-api.pes.ch/';
 var AppItem = Backbone.Model.extend({
+  url: function() { return SERVER + 'app/' + this.id; },
   clear: function() {
     this.destroy();
   }
@@ -33,20 +34,59 @@ var AppItemView = Backbone.View.extend({
 //////
 // App
 //////
-var Apps = new AppItemList();
-var AppView = Backbone.View.extend({
+var AppsView = Backbone.View.extend({
   el: $('#appzoneapp'),
+  apps: new AppItemList(),
   initialize: function() {
-    Apps.fetch({
-      success: this.render
+    var that = this;
+    this.apps.fetch({
+      success: function() { that.render.call(that); }
     });
   },
   render: function() {
-    Apps.each(function(app) {
+    this.apps.each(function(app) {
       var view = new AppItemView({model: app});
       this.$('#app-list').append(view.render().el);
     });
   }
 });
-window.App = new AppView();
+
+var AppView = Backbone.View.extend({
+  el: $('#appzoneapp'),
+  apps: new AppItemList(),
+  initialize: function() {
+    var that = this;
+    this.$('#app-list').children().remove();
+    this.apps.remove(this.apps.models.slice(0));
+    this.apps.add([{id: this.id}]);
+    this.apps.get(this.id).fetch({
+      success: function() { that.render.call(that); }
+    });
+  },
+  render: function() {
+    this.apps.each(function(app) {
+      var view = new AppItemView({model: app});
+      this.$('#app-list').append(view.render().el);
+    });
+  }
+});
+
+//////
+// Router
+//////
+var AppRouter = Backbone.Router.extend({
+  current: undefined,
+  routes: {
+    '': 'index',
+    'app/:id' : 'app'
+  },
+  index: function() {
+    this.current = new AppsView();
+  },
+  app: function(id) {
+    this.current = new AppView({id: id});
+  }
+});
+window.AppRouter = new AppRouter();
+Backbone.history.start();
 })();
