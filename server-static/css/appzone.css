@@ -83,3 +83,14 @@ div.app {
 .app .lastUpdated:before {
 	content:"Last updated: ";
 }
+
+#feedbacks label {
+	font-weight: normal;
+}
+#feedbacks label.type, #feedbacks label.date {
+	display: inline-block;
+	font-style: italic;
+}
+#feedbacks label.feedback {
+	display: block;
+}

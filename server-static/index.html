@@ -11,6 +11,7 @@
   <div id="appzoneapp">
     <h1>AppZone</h1>
     <ul id="app-list"></ul>
+    <ul id="feedbacks"></ul>
   </div>
 
   <!-- Templates -->
@@ -34,6 +35,14 @@
         <label class="lastUpdateDate"><%- moment(new Date(ios.lastUpdateDate)).fromNow() %></label>
       </div>
       <% } %>
+    </div>
+  </script>
+
+  <script type="text/template" id="feedback-template">
+    <div class="feedback">
+      <label class="date"><%- moment(new Date(date)).fromNow() %></label>
+      <label class="type"><%- appType %></label>
+      <label class="feedback"><%- feedback %></label>
     </div>
   </script>
 
