@@ -84,12 +84,12 @@ var AppView = Backbone.View.extend({
     });
   },
   render: function() {
-    this.$('#app-list').children().remove();
+    $('#app-list').children().remove();
     this.apps.each(function(app) {
       var view = new AppItemView({model: app});
       this.$('#app-list').append(view.render().el);
     });
-    this.$('#feedbacks').children().remove();
+    $('#feedbacks').children().remove();
     this.feedbacks.each(function(app) {
       var view = new FeedbackView({model: app});
       this.$('#feedbacks').append(view.render().el);
@@ -111,6 +111,12 @@ var AppRouter = Backbone.Router.extend({
   },
   app: function(id) {
     this.current = new AppView({id: id});
+  },
+  initialize: function() {
+    this.on('all', function(routeEvent) {
+      $('#app-list').children().remove();
+      $('#feedbacks').children().remove();
+    });
   }
 });
 window.AppRouter = new AppRouter();

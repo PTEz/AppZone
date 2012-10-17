@@ -18,7 +18,7 @@
 
   <script type="text/template" id="app-template">
     <div class="app">
-      <label class="name"><%- name %></label>
+      <label class="name"><a href="#/app/<%- id %>"><%- name %></a></label>
       <% if (typeof(android) != "undefined") { %>
       <div class="unit android">
         <a>Android</a>
