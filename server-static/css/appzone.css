@@ -91,6 +91,13 @@ div.app {
 	display: inline-block;
 	font-style: italic;
 }
+#feedbacks label.type:before { content: "("; }
+#feedbacks label.type:after { content: ")"; }
 #feedbacks label.feedback {
 	display: block;
+}
+#app-feedback input, #app-feedback select, #app-feedback textarea {
+	margin-bottom: 5px;
+	width: 100%;
+	max-width: 400px;
 }

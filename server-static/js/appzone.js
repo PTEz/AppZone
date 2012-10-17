@@ -64,6 +64,9 @@ var AppsView = Backbone.View.extend({
       var view = new AppItemView({model: app});
       this.$('#app-list').append(view.render().el);
     });
+  },
+  destroy: function() {
+    $('#app-list').children().remove();
   }
 });
 
@@ -71,6 +74,10 @@ var AppView = Backbone.View.extend({
   el: $('#appzoneapp'),
   apps: new AppItemList(),
   feedbacks: new FeedbackList(),
+  events: {
+    'click input.submit':  'sendFeedback',
+    'keyup textarea[name=feedback]': 'validateForm'
+  },
   initialize: function() {
     var that = this;
     this.apps.remove(this.apps.models.slice(0));
@@ -82,6 +89,8 @@ var AppView = Backbone.View.extend({
     this.feedbacks.fetch({
       success: function() { that.render.call(that); }
     });
+    $('#app-feedback').html(_.template($('#feedback-form-template').html()));
+    this.validateForm();
   },
   render: function() {
     $('#app-list').children().remove();
@@ -94,6 +103,42 @@ var AppView = Backbone.View.extend({
       var view = new FeedbackView({model: app});
       this.$('#feedbacks').append(view.render().el);
     });
+  },
+  destroy: function() {
+    $('#app-list').children().remove();
+    $('#app-feedback').children().remove();
+    $('#feedbacks').children().remove();
+  },
+  validateForm: function() {
+    var enable = this.$('textarea[name=feedback]').val().length > 0;
+    if (enable) {
+      $('input[type=submit]').removeAttr('disabled');
+    } else {
+      $('input[type=submit]').attr('disabled', 'disabled');
+    }
+  },
+  sendFeedback: function() {
+    var that = this;
+    $.ajax({
+      type: 'POST',
+      // TODO use android/ios
+      url: SERVER + 'app/' + this.id + '/' + this.$('select[name=type]').val() + '/feedback',
+      data: { feedback: this.$('textarea[name=feedback]').val() },
+      dataType: 'json',
+      timeout: 300,
+      context: $('body'),
+      success: function(){
+        that.$('textarea[name=feedback]').val('');
+        that.validateForm.call(that);
+        that.feedbacks.fetch({
+          success: function() { that.render.call(that); }
+        });
+      },
+      error: function(){
+        alert('Ajax error!');
+      }
+    });
+    return false;
   }
 });
 
@@ -107,16 +152,16 @@ var AppRouter = Backbone.Router.extend({
     'app/:id' : 'app'
   },
   index: function() {
-    this.current = new AppsView();
+    this.show(new AppsView());
   },
   app: function(id) {
-    this.current = new AppView({id: id});
+    this.show(new AppView({id: id}));
   },
-  initialize: function() {
-    this.on('all', function(routeEvent) {
-      $('#app-list').children().remove();
-      $('#feedbacks').children().remove();
-    });
+  show: function(view) {
+    if (this.current && this.current.destroy) {
+      this.current.destroy();
+    }
+    this.current = view;
   }
 });
 window.AppRouter = new AppRouter();
