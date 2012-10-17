@@ -121,7 +121,6 @@ var AppView = Backbone.View.extend({
     var that = this;
     $.ajax({
       type: 'POST',
-      // TODO use android/ios
       url: SERVER + 'app/' + this.id + '/' + this.$('select[name=type]').val() + '/feedback',
       data: { feedback: this.$('textarea[name=feedback]').val() },
       dataType: 'json',
