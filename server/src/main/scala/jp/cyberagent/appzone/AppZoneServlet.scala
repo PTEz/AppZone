@@ -197,6 +197,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     feedbackRecord.appId.set(id)
     feedbackRecord.appType.set(appType)
     feedbackRecord.feedback.set(feedback)
+    feedbackRecord.setDateToNow
     feedbackRecord.save
     Json(feedbackRecord.asJValue)
   }

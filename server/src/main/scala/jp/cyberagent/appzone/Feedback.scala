@@ -12,7 +12,9 @@ case class Feedback private() extends MongoRecord[Feedback] with ObjectIdPk[Feed
   object appId extends StringField(this, 20)
   object appType extends StringField(this, 10)
   object feedback extends StringField(this, "")
-  object date extends StringField(this, Feedback.DATE_FORMAT.format(new Date))
+  object date extends StringField(this, "")
+  
+  def setDateToNow() = date.set(Feedback.DATE_FORMAT.format(new Date))
 }
 
 object Feedback extends Feedback with MongoMetaRecord[Feedback] {
