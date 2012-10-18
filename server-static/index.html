@@ -25,7 +25,7 @@
         <a>Android</a>
         <label class="version"><%- android.version %></label>
         <label class="versionCode"><%- android.versionCode %></label>
-        <label class="lastUpdateDate"><%- moment(new Date(android.lastUpdateDate)).fromNow() %></label>
+        <label class="lastUpdateDate"><%- moment(android.lastUpdateDate).fromNow() %></label>
       </div>
       <% } %>
       <% if (typeof(ios) != "undefined") { %>
@@ -33,7 +33,7 @@
         <a target="_blank">iOS</a>
         <label class="version"><%- ios.version %></label>
         <label class="versionCode"><%- ios.versionCode %></label>
-        <label class="lastUpdateDate"><%- moment(new Date(ios.lastUpdateDate)).fromNow() %></label>
+        <label class="lastUpdateDate"><%- moment(ios.lastUpdateDate).fromNow() %></label>
       </div>
       <% } %>
     </div>
@@ -41,7 +41,7 @@
 
   <script type="text/template" id="feedback-template">
     <div class="feedback">
-      <label class="date"><%- moment(new Date(date)).fromNow() %></label>
+      <label class="date"><%- moment(date).fromNow() %></label>
       <label class="type"><%- appType %></label>
       <label class="feedback"><%- feedback %></label>
     </div>
