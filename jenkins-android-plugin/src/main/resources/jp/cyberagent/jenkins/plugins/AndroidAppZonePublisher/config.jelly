@@ -12,7 +12,4 @@
   <f:entry title="id" field="id">
     <f:textbox />
   </f:entry>
-  <f:entry title="apk-file" field="apkFile">
-    <f:textbox />
-  </f:entry>
 </j:jelly>

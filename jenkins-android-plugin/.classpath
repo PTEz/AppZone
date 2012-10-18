@@ -158,6 +158,11 @@
     </attributes>
   </classpathentry>
   <classpathentry kind="var" path="M2_REPO/net/sourceforge/cssparser/cssparser/0.9.5/cssparser-0.9.5.jar" sourcepath="M2_REPO/net/sourceforge/cssparser/cssparser/0.9.5/cssparser-0.9.5-sources.jar"/>
+  <classpathentry kind="var" path="M2_REPO/com/googlecode/plist/dd-plist/1.0/dd-plist-1.0.jar" sourcepath="M2_REPO/com/googlecode/plist/dd-plist/1.0/dd-plist-1.0-sources.jar">
+    <attributes>
+      <attribute value="jar:file:/Users/boos_patrick/.m2/repository/com/googlecode/plist/dd-plist/1.0/dd-plist-1.0-javadoc.jar!/" name="javadoc_location"/>
+    </attributes>
+  </classpathentry>
   <classpathentry kind="var" path="M2_REPO/org/jvnet/hudson/dom4j/dom4j/1.6.1-hudson-3/dom4j-1.6.1-hudson-3.jar" sourcepath="M2_REPO/org/jvnet/hudson/dom4j/dom4j/1.6.1-hudson-3/dom4j-1.6.1-hudson-3-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/apache/maven/doxia/doxia-sink-api/1.0/doxia-sink-api-1.0.jar" sourcepath="M2_REPO/org/apache/maven/doxia/doxia-sink-api/1.0/doxia-sink-api-1.0-sources.jar">
     <attributes>

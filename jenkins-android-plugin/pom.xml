@@ -10,7 +10,7 @@
   <artifactId>android-appzone</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
-
+  
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
@@ -33,4 +33,12 @@
       <email>boos_patrick@cyberagent.co.jp</email>
     </developer>
   </developers>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.googlecode.plist</groupId>
+      <artifactId>dd-plist</artifactId>
+      <version>1.0</version> <!-- corresponds to r73 -->
+    </dependency>
+  </dependencies>
 </project>

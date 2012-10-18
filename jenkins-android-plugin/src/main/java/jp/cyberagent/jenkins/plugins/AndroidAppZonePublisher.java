@@ -16,9 +16,12 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -32,39 +35,34 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.AbstractFileFilter;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-/**
- * Sample {@link Builder}.
- * <p>
- * When the user configures the project and enables this builder,
- * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked and a new
- * {@link HelloWorldBuilder} is created. The created instance is persisted to
- * the project configuration XML by using XStream, so this allows you to use
- * instance fields (like {@link #apkFile}) to remember the configuration.
- * <p>
- * When a build is performed, the
- * {@link #perform(AbstractBuild, Launcher, BuildListener)} method will be
- * invoked.
- * 
- * @author Kohsuke Kawaguchi
- */
+import com.dd.plist.NSArray;
+import com.dd.plist.NSDictionary;
+import com.dd.plist.PropertyListParser;
+
 public class AndroidAppZonePublisher extends Notifier {
-    public static final String DEFAULT_APPSERVER = "http://172.19.4.248/appzone/";
+    public static final String DEFAULT_APPSERVER = "http://appzone-api.pes.ch/";
+
+    private static final String TAG = "[AppZone] ";
 
     private final String id;
     private String name;
-    private final String apkFile;
 
     // Fields in config.jelly must match the parameter names in the
     // "DataBoundConstructor"
     @DataBoundConstructor
-    public AndroidAppZonePublisher(final String id, final String name, final String apkFile) {
+    public AndroidAppZonePublisher(final String id, final String name) {
         this.id = id;
         this.name = name;
-        this.apkFile = apkFile;
     }
 
     public String getId() {
@@ -73,10 +71,6 @@ public class AndroidAppZonePublisher extends Notifier {
 
     public String getName() {
         return name;
-    }
-
-    public String getApkFile() {
-        return apkFile;
     }
 
     public FormValidation doCheckId(@QueryParameter
@@ -109,38 +103,32 @@ public class AndroidAppZonePublisher extends Notifier {
     @Override
     public boolean perform(final AbstractBuild build, final Launcher launcher,
             final BuildListener listener) {
-        File f = new File(build.getWorkspace().getRemote() + "/" + apkFile);
-        if (!f.exists()) {
-            listener.getLogger().println(f.getAbsolutePath() + " does not exist! Aborting.");
-            return false;
-        }
         String server = getDescriptor().getServer();
         if (server == null || server.length() == 0) {
-            listener.getLogger().println(
-                    "NBU AppZone server not set. Please set in globa config! Aborting.");
+            listener.getLogger().println(TAG +
+                    "NBU AppZone server not set. Please set in global config! Aborting.");
+            return false;
         }
 
-        HttpClient httpclient = new HttpClient();
-        if (!server.endsWith("/")) {
-            server += "/";
-        }
-        server += "app/" + id + "/android";
-        PostMethod filePost = new PostMethod(server);
         try {
+            DeployStrategy deploy = createDeployStrategy(build, listener);
+            if (deploy == null) {
+                return false;
+            }
+            HttpClient httpclient = new HttpClient();
+            PostMethod filePost = new PostMethod(deploy.getUrl());
             if (name == null || name.length() == 0) {
                 name = build.getProject().getName();
             }
-            Part[] parts = {
-                    new StringPart("version", getVersion(build, listener)),
-                    new FilePart("apk", f),
-            };
-            filePost.setRequestEntity(new MultipartRequestEntity(parts, filePost.getParams()));
-            listener.getLogger().println("[AppZone] Publishing to: " + server);
+            filePost.setRequestEntity(new MultipartRequestEntity(deploy.getParts(), filePost
+                    .getParams()));
+            listener.getLogger().println(TAG + "Publishing to: " + deploy.getUrl());
             httpclient.executeMethod(filePost);
             int statusCode = filePost.getStatusCode();
             if (statusCode < 200 || statusCode > 299) {
                 String body = filePost.getResponseBodyAsString();
-                listener.getLogger().println("[AppZone] Response (" + statusCode + "):" + body);
+                listener.getLogger().println(TAG + "Response (" + statusCode + "):" + body);
+                return false;
             }
             return true;
         } catch (IOException e) {
@@ -149,7 +137,114 @@ public class AndroidAppZonePublisher extends Notifier {
         return false;
     }
 
-    private String getVersion(final AbstractBuild build, final BuildListener listener) {
+    private DeployStrategy createDeployStrategy(final AbstractBuild build,
+            final BuildListener listener) throws FileNotFoundException {
+        // get .apk and .ipa files
+        Collection<File> files = getPossibleAppFiles(build);
+        File ipaFile = getIpaFileThatHasManifest(files, build, listener);
+        File apkFile = getApkFile(files);
+        String version = getVersion(ipaFile, apkFile, build, listener);
+        listener.getLogger().println(TAG + "Version: " + version);
+        if (ipaFile != null) {
+            listener.getLogger().println(TAG + "File: " + ipaFile.getAbsolutePath());
+            return new IOsDeployStrategy(id, version, ipaFile, getManifestFileFor(ipaFile));
+        } else if (apkFile != null) {
+            listener.getLogger().println(TAG + "File: " + apkFile.getAbsolutePath());
+            return new AndroidDeployStrategy(id, version, apkFile);
+        } else {
+            String errorMessage = TAG
+                    + "Could not find a .apk file nor a .ipa with matching .manifest file. Aborting.";
+            listener.getLogger().println(errorMessage);
+            return null;
+        }
+    }
+
+    private Collection<File> getPossibleAppFiles(final AbstractBuild build) {
+        File dir = new File(build.getWorkspace().getRemote());
+        Collection<File> files = FileUtils.listFiles(
+                dir,
+                new RegexFileFilter("(.(?!unaligned)(?!unsigned))*(\\.apk|\\.ipa)"),
+                FileFilterUtils.makeCVSAware(DirectoryFileFilter.DIRECTORY)
+                );
+        return files;
+    }
+
+    private File getIpaFileThatHasManifest(final Collection<File> files, final AbstractBuild build,
+            final BuildListener listener) {
+        for (File file : files) {
+            // && getManifestFileFor(file).exists()
+            if (file.getAbsolutePath().endsWith(".ipa")) {
+                Collection<File> plistFiles = FileUtils.listFiles(
+                        new File(build.getWorkspace().getRemote()),
+                        new AbstractFileFilter() {
+
+                            @Override
+                            public boolean accept(final File file) {
+                                return file.getAbsolutePath().endsWith(".app/Info.plist");
+                            }
+                        },
+                        FileFilterUtils.makeCVSAware(DirectoryFileFilter.DIRECTORY)
+                        );
+                if (plistFiles.isEmpty()) {
+                    return null;
+                } else if (plistFiles.size() > 1) {
+                    listener.getLogger().println(
+                            TAG + "Error: Found multiple Info.plist files in *.app folders.");
+                    return null;
+                }
+
+                File manifestFile = getManifestFileFor(file);
+                listener.getLogger().println(TAG + "Creating " + manifestFile.getAbsolutePath());
+                try {
+                    NSDictionary rootDict = (NSDictionary) PropertyListParser.parse(
+                            plistFiles.iterator().next());
+                    String bundleName = rootDict.objectForKey("CFBundleName")
+                            .toString();
+                    String bundleIdentifier = rootDict.objectForKey("CFBundleIdentifier")
+                            .toString();
+                    String bundleShortVersion = rootDict.objectForKey("CFBundleShortVersionString")
+                            .toString();
+
+                    InputStream inputStream = getClass().getResourceAsStream(
+                            "/OTAManifestTemplate.plist");
+                    StringWriter writer = new StringWriter();
+                    IOUtils.copy(inputStream, writer, "UTF-8");
+                    String manifest = writer.toString();
+
+                    manifest = manifest.replace("${url}", createAppUrl("ios", id));
+                    manifest = manifest.replace("${CFBundleName}", bundleName);
+                    manifest = manifest.replace("${CFBundleIdentifier}", bundleIdentifier);
+                    manifest = manifest.replace("${CFBundleShortVersionString}",
+                            bundleShortVersion);
+                    FileUtils.writeStringToFile(manifestFile, manifest);
+                } catch (Exception e) {
+                    listener.getLogger().println(
+                            TAG + "Problmen creating manifest based on Info.plist: "
+                                    + e.getMessage());
+                    return null;
+                }
+                return file;
+            }
+        }
+        return null;
+    }
+
+    private File getApkFile(final Collection<File> files) {
+        for (File file : files) {
+            if (file.getName().endsWith(".apk")) {
+                return file;
+            }
+        }
+        return null;
+    }
+
+    private File getManifestFileFor(final File ipaFile) {
+        String path = ipaFile.getAbsolutePath();
+        return new File(path.substring(0, path.length() - 4) + ".manifest");
+    }
+
+    private String getVersion(final File ipaFile, final File apkFile, final AbstractBuild build,
+            final BuildListener listener) {
         File versionFile = new File(build.getWorkspace().getRemote() + "/VERSION");
         if (versionFile.exists()) {
             try {
@@ -160,11 +255,22 @@ public class AndroidAppZonePublisher extends Notifier {
                 in.close();
                 return strLine;
             } catch (Exception e) {
-                listener.getLogger().println("Error: " + e.getMessage());
+                listener.getLogger().println(TAG + "Error: " + e.getMessage());
             }
-        } else {
+        } else if (ipaFile != null) {
             try {
-                ZipFile zip = new ZipFile(build.getWorkspace().getRemote() + "/" + apkFile);
+                File file = getManifestFileFor(ipaFile);
+                NSDictionary rootDict = (NSDictionary) PropertyListParser.parse(file);
+                NSArray items = (NSArray) rootDict.objectForKey("items");
+                NSDictionary item = (NSDictionary) items.objectAtIndex(0);
+                NSDictionary metadata = (NSDictionary) item.objectForKey("metadata");
+                return metadata.objectForKey("bundle-version").toString();
+            } catch (Exception e) {
+                listener.getLogger().println(TAG + "Error: " + e.getMessage());
+            }
+        } else if (apkFile != null) {
+            try {
+                ZipFile zip = new ZipFile(apkFile);
                 ZipEntry mft = zip.getEntry("AndroidManifest.xml");
                 InputStream is = zip.getInputStream(mft);
 
@@ -179,10 +285,20 @@ public class AndroidAppZonePublisher extends Notifier {
                     return version;
                 }
             } catch (Exception e) {
-                listener.getLogger().println("Error: " + e.getMessage());
+                listener.getLogger().println(TAG + "Error: " + e.getMessage());
             }
         }
         return "NOT SET";
+    }
+
+    private String createAppUrl(final String type, final String id) {
+        String server = getDescriptor().getServer();
+        StringBuilder url = new StringBuilder(server);
+        if (!server.endsWith("/")) {
+            url.append("/");
+        }
+        url.append("app/" + id + "/" + type);
+        return url.toString();
     }
 
     // Overridden for better type safety.
@@ -250,6 +366,59 @@ public class AndroidAppZonePublisher extends Notifier {
 
         public void setServer(final String server) {
             this.server = server;
+        }
+    }
+
+    private abstract class DeployStrategy {
+        private final String mUrl;
+
+        public DeployStrategy(final String type, final String id) {
+            mUrl = createAppUrl(type, id);
+        }
+
+        public String getUrl() {
+            return mUrl;
+        }
+
+        public abstract Part[] getParts();
+    }
+
+    private class AndroidDeployStrategy extends DeployStrategy {
+
+        private final Part[] mParts;
+
+        public AndroidDeployStrategy(final String id, final String version, final File apkFile)
+                throws FileNotFoundException {
+            super("android", id);
+            mParts = new Part[] {
+                    new StringPart("version", version),
+                    new FilePart("apk", apkFile),
+            };
+        }
+
+        @Override
+        public Part[] getParts() {
+            return mParts;
+        }
+    }
+
+    private class IOsDeployStrategy extends DeployStrategy {
+
+        private final Part[] mParts;
+
+        public IOsDeployStrategy(final String id, final String version,
+                final File ipaFile, final File manifestFile) throws FileNotFoundException {
+            super("ios", id);
+            mParts = new Part[] {
+                    new StringPart("version", version),
+                    new FilePart("ipa", ipaFile),
+                    new FilePart("manifest", manifestFile),
+            };
+        }
+
+        @Override
+        public Part[] getParts() {
+            return mParts;
         }
     }
 }
