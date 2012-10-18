@@ -74,14 +74,12 @@ div.app {
 }
 .app .versionCode:before { content: "("; }
 .app .versionCode:after { content: ")"; }
-.app .lastUpdated {
-	font-size: 12px;
+.app .lastUpdateDate {
+	font-size: 11px;
+	font-style: italic;
+	font-weight: normal;
 	text-decoration: none;
-	text-shadow: rgba(0, 0, 0, 0.247059) 0px -1px 0px;
 	display: block;
-}
-.app .lastUpdated:before {
-	content:"Last updated: ";
 }
 
 #feedbacks label {
