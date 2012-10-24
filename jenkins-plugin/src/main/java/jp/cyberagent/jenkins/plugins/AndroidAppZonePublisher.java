@@ -78,6 +78,7 @@ public class AndroidAppZonePublisher extends Notifier {
 
         try {
             DeployStrategy deploy;
+            listener.getLogger().println(TAG + "File: " + fileName);
             if (fileName.endsWith(".apk")) {
                 deploy = new DeployStrategyAndroid(server, id, file, build, listener);
             } else if (fileName.endsWith(".ipa")) {
@@ -85,7 +86,6 @@ public class AndroidAppZonePublisher extends Notifier {
             } else {
                 return false;
             }
-            listener.getLogger().println(TAG + "File: " + fileName);
             listener.getLogger().println(TAG + "Version: " + deploy.getVersion());
             listener.getLogger().println(TAG + "Publishing to: " + deploy.getUrl());
 
@@ -125,6 +125,7 @@ public class AndroidAppZonePublisher extends Notifier {
         return (DescriptorImpl) super.getDescriptor();
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }

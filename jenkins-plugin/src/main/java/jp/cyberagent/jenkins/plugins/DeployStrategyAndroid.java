@@ -13,6 +13,14 @@ import java.util.zip.ZipFile;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.lang.exception.ExceptionUtils;
+
+import brut.androlib.res.AndrolibResources;
+import brut.androlib.res.data.ResPackage;
+import brut.androlib.res.data.ResTable;
+import brut.androlib.res.data.value.ResStringValue;
+import brut.androlib.res.data.value.ResValue;
+import brut.androlib.res.util.ExtFile;
 
 class DeployStrategyAndroid extends DeployStrategy {
 
@@ -37,6 +45,29 @@ class DeployStrategyAndroid extends DeployStrategy {
     @Override
     public String getVersion() {
         try {
+            String version = getVersionStringFromManifest();
+
+            AndrolibResources res = new AndrolibResources();
+            ExtFile file = new ExtFile(mApkFile);
+            ResTable table = res.getResTable(file);
+            ResPackage defaultPackage = table.listMainPackages().iterator().next();
+
+            if (version.startsWith("resourceID 0x")) {
+                int resId = Integer.parseInt(version.substring(13), 16);
+                ResValue value = table.getValue(defaultPackage.getName(),
+                        "string", table.getResSpec(resId).getName());
+                return ((ResStringValue) value).encodeAsResXmlValue();
+            } else {
+                return version;
+            }
+        } catch (Exception e) {
+            getLogger().println(TAG + "Error: " + ExceptionUtils.getStackTrace(e));
+        }
+        return super.getVersion();
+    }
+
+    private String getVersionStringFromManifest() {
+        try {
             ZipFile zip = new ZipFile(mApkFile);
             ZipEntry mft = zip.getEntry("AndroidManifest.xml");
             InputStream is = zip.getInputStream(mft);
@@ -48,12 +79,10 @@ class DeployStrategyAndroid extends DeployStrategy {
             int start = string.indexOf("versionName=\"") + 13;
             int end = string.indexOf("\"", start);
             String version = string.substring(start, end);
-            if (!version.startsWith("resourceID")) {
-                return version;
-            }
+            return version;
         } catch (Exception e) {
             getLogger().println(TAG + "Error: " + e.getMessage());
         }
-        return super.getVersion();
+        return null;
     }
 }
