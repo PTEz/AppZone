@@ -39,11 +39,16 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   post("/app") {
-    val app = App.createRecord
-    app.id.set(params.get("id").getOrElse(""))
-    app.name.set(params.get("name").getOrElse(""))
-    App.update(("id" -> app.id.asJValue), app, Upsert)
+    val app = createApp(params.get("id").getOrElse(""), params.get("name").getOrElse(""))
     Json(app.asJValue)
+  }
+  
+  def createApp(id: String, name: String) = {
+    val app = App.createRecord
+    app.id.set(id)
+    app.name.set(name)
+    App.update(("id" -> app.id.asJValue), app, Upsert)
+    app
   }
 
   get("/app/:id") {
@@ -118,19 +123,21 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   def publishPlatform(appId: String, releaseId: String, resList: App => ReleaseMap) = {
+    def updateApp(app: App) = {
+      val releaseList = resList(app)
+      val record: AppPlatformEntry = releaseList.getApp(releaseId).openOr(AppPlatformEntry.createRecord)
+      record.version.set(params.getOrElse("version", "NOT SET"))
+      record.incrementVersionCode
+      record.setDateToNow
+      releaseList.addApp(releaseId, record)
+      App.update(("id" -> appId), app)
+	  Json(app.asJValue)
+    }
+    
     val appRes = App.find(("id" -> appId))
     appRes match {
-      case Full(app) => {
-        val releaseList = resList(app)
-        val record: AppPlatformEntry = releaseList.getApp(releaseId).openOr(AppPlatformEntry.createRecord)
-        record.version.set(params.getOrElse("version", "NOT SET"))
-        record.incrementVersionCode
-        record.setDateToNow
-        releaseList.addApp(releaseId, record)
-        App.update(("id" -> appId), app)
-        Json(app.asJValue)
-      }
-      case _ => resourceNotFound()
+      case Full(app) => updateApp(app)
+      case _ => updateApp(createApp(appId, appId))
     }
   }
 
