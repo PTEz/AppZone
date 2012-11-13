@@ -26,8 +26,12 @@ import java.net.URLEncoder
 import java.lang.String
 import java.io.ByteArrayInputStream
 import scala.io.Source
+import net.liftweb.common.Full
+import scala.collection.mutable.HashMap
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport with CorsSupport {
+
+  val DEFAULT_RELEASE = "_default"
 
   get("/apps") {
     Json(App.findAll.map(p => p.asJValue))
@@ -50,13 +54,19 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   get("/app/:id/android") {
-    val appId = params("id")
+    getAndroidApk(params("id"), DEFAULT_RELEASE)
+  }
+  get("/app/:id/android/:id2") {
+    getAndroidApk(params("id"), params("id2"))
+  }
+
+  def getAndroidApk(appId: String, releaseId: String) = {
     MongoDB.use(DefaultMongoIdentifier) { db =>
       val fs = new GridFS(db)
-      val file = fs.findOne(appId + "/android.apk")
+      val file = fs.findOne(appId + "/android-" + releaseId + ".apk")
       if (file != null) {
         response.setHeader("Content-Type", "application/vnd.android.package-archive")
-        response.setHeader("Content-Disposition", "attachment; filename=\"" + appId + ".apk\"")
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + appId + "-" + releaseId + ".apk\"")
         response.setHeader("Content-Length", file.getLength().toString)
         org.scalatra.util.io.copy(file.getInputStream(), response.getOutputStream)
       } else {
@@ -66,49 +76,39 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   post("/app/:id/android") {
-    val appId = params("id")
+    publishAndroid(params("id"), DEFAULT_RELEASE)
+  }
+
+  post("/app/:id/android/:id2") {
+    publishAndroid(params("id"), params("id2"))
+  }
+
+  post("/app/:id/ios") {
+    publishIOs(params("id"), DEFAULT_RELEASE)
+  }
+
+  post("/app/:id/ios/:id2") {
+    publishIOs(params("id"), params("id2"))
+  }
+
+  def publishAndroid(appId: String, releaseId: String) = {
     fileParams.get("apk") match {
       case Some(file) =>
-        storeFile(file, appId + "/android.apk")
-        val appRes = App.find(("id" -> appId))
-        appRes match {
-          case Full(app) => {
-            val record: AppPlatformEntry = app.android.valueBox.openOr(AppPlatformEntry.createRecord)
-            record.version.set(params.getOrElse("version", "NOT SET"))
-            record.incrementVersionCode
-            record.setDateToNow
-            app.android.set(record)
-            App.update(("id" -> appId), app)
-            Json(app.asJValue)
-          }
-          case _ => resourceNotFound()
-        }
+        storeFile(file, appId + "/android-" + releaseId + ".apk")
+        publishPlatform(appId, releaseId, app => app.android)
       case None =>
         BadRequest("apk (file) parameter required")
     }
   }
 
-  post("/app/:id/ios") {
-    val appId = params("id")
+  def publishIOs(appId: String, releaseId: String) = {
     fileParams.get("ipa") match {
       case Some(ipaFile) =>
         fileParams.get("manifest") match {
           case Some(manifestFile) =>
-            storeFile(ipaFile, appId + "/ios.ipa")
-            storeFile(manifestFile, appId + "/ios.manifest")
-            val appRes = App.find(("id" -> appId))
-            appRes match {
-              case Full(app) => {
-                val record: AppPlatformEntry = app.ios.valueBox.openOr(AppPlatformEntry.createRecord)
-                record.version.set(params.getOrElse("version", "NOT SET"))
-                record.incrementVersionCode
-                record.setDateToNow
-                app.ios.set(record)
-                App.update(("id" -> appId), app)
-                Json(app.asJValue)
-              }
-              case _ => resourceNotFound()
-            }
+            storeFile(ipaFile, appId + "/ios-" + releaseId + ".ipa")
+            storeFile(manifestFile, appId + "/ios-" + releaseId + ".manifest")
+            publishPlatform(appId, releaseId, app => app.ios)
           case _ => BadRequest("manifest (file) parameter required")
         }
       case None =>
@@ -116,21 +116,53 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     }
   }
 
+  def publishPlatform(appId: String, releaseId: String, resList: App => ReleaseMap) = {
+    val appRes = App.find(("id" -> appId))
+    appRes match {
+      case Full(app) => {
+        val releaseList = resList(app)
+        val record: AppPlatformEntry = releaseList.getApp(releaseId).openOr(AppPlatformEntry.createRecord)
+        record.version.set(params.getOrElse("version", "NOT SET"))
+        record.incrementVersionCode
+        record.setDateToNow
+        releaseList.addApp(releaseId, record)
+        App.update(("id" -> appId), app)
+        Json(app.asJValue)
+      }
+      case _ => resourceNotFound()
+    }
+  }
+
   get("/app/:id/ios") {
-    val url = URLEncoder.encode(request.getRequestURL().toString() + ".manifest", "UTF-8");
+    getIOsItmsServices(params("id"), DEFAULT_RELEASE)
+  }
+
+  get("/app/:id/ios/:id2") {
+    getIOsItmsServices(params("id"), params("id2"))
+  }
+
+  def getIOsItmsServices(appId: String, releaseId: String) = {
+    val url = URLEncoder.encode(request.getRequestURL().toString() + "/manifest", "UTF-8");
     redirect("itms-services://?action=download-manifest&url=" + url)
   }
 
-  get("/app/:id/ios.manifest") {
-    val appId = params("id")
+  get("/app/:id/ios/manifest") {
+    getIOsManifest(params("id"), DEFAULT_RELEASE)
+  }
+
+  get("/app/:id/ios/:id2/manifest") {
+    getIOsManifest(params("id"), params("id2"))
+  }
+
+  def getIOsManifest(appId: String, releaseId: String) = {
     MongoDB.use(DefaultMongoIdentifier) { db =>
       val fs = new GridFS(db)
-      val file = fs.findOne(appId + "/ios.manifest")
+      val file = fs.findOne(appId + "/ios-" + releaseId + ".manifest")
       if (file != null) {
         response.setHeader("Content-Type", "text/xml")
         val content = Source.fromInputStream(file.getInputStream()).getLines.mkString("\n")
         val url = request.getRequestURL().toString
-        val contentNew = """<string>.*\.ipa</string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf(".")) + ".ipa</string>")
+        val contentNew = """<string>.*\.ipa</string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf("/")) + "/ipa</string>")
         val input = new ByteArrayInputStream(contentNew.getBytes("UTF-8"));
         org.scalatra.util.io.copy(input, response.getOutputStream)
       } else {
@@ -139,11 +171,18 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     }
   }
 
-  get("/app/:id/ios.ipa") {
-    val appId = params("id")
+  get("/app/:id/ios/ipa") {
+    getIOsIpa(params("id"), DEFAULT_RELEASE)
+  }
+
+  get("/app/:id/ios/:id2/ipa") {
+    getIOsIpa(params("id"), params("id2"))
+  }
+
+  def getIOsIpa(appId: String, releaseId: String) = {
     MongoDB.use(DefaultMongoIdentifier) { db =>
       val fs = new GridFS(db)
-      val file = fs.findOne(appId + "/ios.ipa")
+      val file = fs.findOne(appId + "/ios-" + releaseId + ".ipa")
       if (file != null) {
         response.setHeader("Content-Type", "application/octet-stream")
         response.setHeader("Content-Disposition", "attachment; filename=\"" + appId + ".ipa\"")
@@ -158,7 +197,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   post("/app/:id/feedback") {
     storeFeedback(params("id"), params("type"), params("feedback"))
   }
-  
+
   post("/app/:id/android/feedback") {
     storeFeedback(params("id"), "android", params("feedback"))
   }

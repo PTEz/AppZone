@@ -20,23 +20,21 @@
   <script type="text/template" id="app-template">
     <div class="app">
       <label class="name"><a href="#/app/<%- id %>"><%- name %></a></label>
-      <% if (typeof(android) != "undefined") { %>
-      <div class="unit android">
-        <a>Android</a>
-        <label class="version"><%- android.version %></label>
-        <label class="versionCode"><%- android.versionCode %></label>
-        <label class="lastUpdateDate"><%- moment(android.lastUpdateDate).fromNow() %></label>
+      <div class="releases">
+        <ul class="android"></ul>
+        <ul class="ios"></ul>
       </div>
-      <% } %>
-      <% if (typeof(ios) != "undefined") { %>
-      <div class="unit ios">
-        <a target="_blank">iOS</a>
-        <label class="version"><%- ios.version %></label>
-        <label class="versionCode"><%- ios.versionCode %></label>
-        <label class="lastUpdateDate"><%- moment(ios.lastUpdateDate).fromNow() %></label>
-      </div>
-      <% } %>
     </div>
+  </script>
+
+  <script type="text/template" id="release-template">
+    <a class="release download" href="#">
+      <% if (id !== "_default") { %>
+        <label class="id"><%- id %></label>
+      <% } %>
+      <span class="version"><%- version %></span>
+      <span class="lastUpdateDate"><%- moment(lastUpdateDate).fromNow() %></span>
+    </a>
   </script>
 
   <script type="text/template" id="feedback-template">

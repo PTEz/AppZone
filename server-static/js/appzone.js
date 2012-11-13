@@ -1,10 +1,29 @@
 /*global Backbone,_ */
 (function() {
 var SERVER = 'http://appzone-api.pes.ch/';
+// var SERVER = 'http://localhost:8080/';
 var AppItem = Backbone.Model.extend({
   url: function() { return SERVER + 'app/' + this.id; },
   clear: function() {
     this.destroy();
+  },
+  parse: function(data) {
+    function doParse(name) {
+      var items = [];
+      var keys = _.keys(data[name]);
+      for (var i = 0; i < keys.length; i++) {
+        var item = _.clone(data[name][keys[i]]);
+        item.appId = data.id;
+        item.id = keys[i];
+        item.platform = name;
+        items.push(item);
+      }
+      return items;
+    }
+
+    data.ios = doParse('ios');
+    data.android = doParse('android');
+    return data;
   }
 });
 
@@ -19,12 +38,31 @@ var AppItemView = Backbone.View.extend({
   render: function() {
     var app = this.model;
     this.$el.html(this.template(app.toJSON()));
-    if (app.attributes.android) {
-      this.$('.android a').attr('href', SERVER + 'app/' + app.id + '/android');
+    for (var i = 0; i < app.attributes.android.length; i++) {
+      var view = new ReleaseItemView({model: app.attributes.android[i]});
+      this.$('.android').append(view.render().el);
     }
-    if (app.attributes.ios) {
-      this.$('.ios a').attr('href', SERVER + 'app/' + app.id + '/ios');
+    for (var j = 0; j < app.attributes.ios.length; j++) {
+      var view2 = new ReleaseItemView({model: app.attributes.ios[j]});
+      this.$('.ios').append(view2.render().el);
     }
+    //if (app.attributes.android) {
+    //  this.$('.android a').attr('href', SERVER + 'app/' + app.id + '/android');
+    //}
+    //if (app.attributes.ios) {
+    //  this.$('.ios a').attr('href', SERVER + 'app/' + app.id + '/ios');
+    //}
+    return this;
+  }
+});
+
+var ReleaseItemView = Backbone.View.extend({
+  tagName: 'li',
+  template: _.template($('#release-template').html()),
+  render: function() {
+    console.log(this);
+    this.$el.html(this.template(this.model));
+    this.$('a.download').attr('href', SERVER + 'app/' + this.model.appId + '/' +this.model.platform + '/' + this.model.id);
     return this;
   }
 });
