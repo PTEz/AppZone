@@ -37,16 +37,22 @@ public class AndroidAppZonePublisher extends Notifier {
     private static final String TAG = "[AppZone] ";
 
     private final String id;
+    private final String tag;
 
     // Fields in config.jelly must match the parameter names in the
     // "DataBoundConstructor"
     @DataBoundConstructor
-    public AndroidAppZonePublisher(final String id) {
+    public AndroidAppZonePublisher(final String id, final String tag) {
         this.id = id;
+        this.tag = tag;
     }
 
     public String getId() {
         return id;
+    }
+
+    public String getTag() {
+        return tag;
     }
 
     public FormValidation doCheckId(@QueryParameter
@@ -80,9 +86,9 @@ public class AndroidAppZonePublisher extends Notifier {
             DeployStrategy deploy;
             listener.getLogger().println(TAG + "File: " + fileName);
             if (fileName.endsWith(".apk")) {
-                deploy = new DeployStrategyAndroid(server, id, file, build, listener);
+                deploy = new DeployStrategyAndroid(server, id, tag, file, build, listener);
             } else if (fileName.endsWith(".ipa")) {
-                deploy = new DeployStrategyIOs(server, id, file, build, listener);
+                deploy = new DeployStrategyIOs(server, id, tag, file, build, listener);
             } else {
                 return false;
             }

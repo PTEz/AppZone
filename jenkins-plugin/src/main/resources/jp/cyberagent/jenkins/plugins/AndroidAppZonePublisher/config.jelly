@@ -12,4 +12,9 @@
   <f:entry title="id" field="id">
     <f:textbox />
   </f:entry>
+  <f:advanced>
+  	<f:entry title="tag" field="tag">
+      <f:textbox />
+    </f:entry>
+  </f:advanced>
 </j:jelly>

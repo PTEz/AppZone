@@ -27,9 +27,10 @@ class DeployStrategyAndroid extends DeployStrategy {
     private final File mApkFile;
     private final Part[] mParts;
 
-    public DeployStrategyAndroid(final String server, final String id, final File apkFile,
-            final AbstractBuild build, final BuildListener listener) throws FileNotFoundException {
-        super(server, "android", id, build, listener);
+    public DeployStrategyAndroid(final String server, final String id, final String tag,
+            final File apkFile, final AbstractBuild build, final BuildListener listener)
+            throws FileNotFoundException {
+        super(server, "android", id, tag, build, listener);
         mApkFile = apkFile;
         mParts = new Part[] {
                 new StringPart("version", getVersion()),

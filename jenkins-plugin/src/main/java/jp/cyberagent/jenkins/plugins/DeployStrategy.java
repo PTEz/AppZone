@@ -20,8 +20,8 @@ abstract class DeployStrategy {
     private final BuildListener mListener;
 
     public DeployStrategy(final String server, final String type, final String id,
-            final AbstractBuild build, final BuildListener listener) {
-        mUrl = createAppUrl(server, type, id);
+            final String tag, final AbstractBuild build, final BuildListener listener) {
+        mUrl = createAppUrl(server, type, id, tag);
         mBuild = build;
         mListener = listener;
     }
@@ -59,12 +59,16 @@ abstract class DeployStrategy {
         return null;
     }
 
-    private String createAppUrl(final String server, final String type, final String id) {
+    private String createAppUrl(final String server, final String type, final String id,
+            final String tag) {
         StringBuilder url = new StringBuilder(server);
         if (!server.endsWith("/")) {
             url.append("/");
         }
         url.append("app/" + id + "/" + type);
+        if (tag != null && !tag.trim().isEmpty()) {
+            url.append("/" + tag.trim());
+        }
         return url.toString();
     }
 

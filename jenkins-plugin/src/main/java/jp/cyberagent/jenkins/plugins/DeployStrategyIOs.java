@@ -28,9 +28,10 @@ class DeployStrategyIOs extends DeployStrategy {
     private final File mIpaFile;
     private final Part[] mParts;
 
-    public DeployStrategyIOs(final String server, final String id, final File ipaFile,
-            final AbstractBuild build, final BuildListener listener) throws FileNotFoundException {
-        super(server, "ios", id, build, listener);
+    public DeployStrategyIOs(final String server, final String id, final String tag,
+            final File ipaFile, final AbstractBuild build, final BuildListener listener)
+            throws FileNotFoundException {
+        super(server, "ios", id, tag, build, listener);
         mIpaFile = ipaFile;
 
         createManifest();
