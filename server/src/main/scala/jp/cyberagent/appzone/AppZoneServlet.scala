@@ -28,13 +28,14 @@ import java.io.ByteArrayInputStream
 import scala.io.Source
 import net.liftweb.common.Full
 import scala.collection.mutable.HashMap
+import com.mongodb.DBObject
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport with CorsSupport {
 
   val DEFAULT_RELEASE = "_default"
 
   get("/apps") {
-    Json(App.findAll.map(p => p.asJValue))
+    Json(App.findAll.sortBy(app => app.name.get).map(p => p.asJValue))
   }
 
   post("/app") {
