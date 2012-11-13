@@ -18,7 +18,7 @@ var AppItem = Backbone.Model.extend({
         item.platform = name;
         items.push(item);
       }
-      return items;
+      return _.sortBy(items, function(item) { return item.id; } );
     }
 
     data.ios = doParse('ios');
