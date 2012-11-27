@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 
@@ -75,7 +77,6 @@ public class AndroidAppZonePublisher extends Notifier {
     @Override
     public boolean perform(final AbstractBuild build, final Launcher launcher,
             final BuildListener listener) {
-        listener.getLogger().println(TAG + "Prepend: " + prependNameToTag);
         String server = getDescriptor().getServer();
         if (server == null || server.length() == 0) {
             listener.getLogger().println(TAG +
@@ -83,7 +84,7 @@ public class AndroidAppZonePublisher extends Notifier {
             return false;
         }
 
-        Collection<File> files = getPossibleAppFiles(build);
+        Collection<File> files = getPossibleAppFiles(build, listener);
         if (files.isEmpty()) {
             listener.getLogger().println(TAG + "No file to puslish found. Skip.");
             return true;
@@ -127,13 +128,31 @@ public class AndroidAppZonePublisher extends Notifier {
         return true;
     }
 
-    private Collection<File> getPossibleAppFiles(final AbstractBuild build) {
+    private Collection<File> getPossibleAppFiles(final AbstractBuild build,
+            final BuildListener listener) {
         File dir = new File(build.getWorkspace().getRemote());
         Collection<File> files = FileUtils.listFiles(
                 dir,
                 new RegexFileFilter("(.(?!unaligned)(?!unsigned))*(\\.apk|\\.ipa)"),
                 FileFilterUtils.makeCVSAware(DirectoryFileFilter.DIRECTORY)
                 );
+        List<File> removeFiles = new LinkedList<File>();
+        for (File file : files) {
+            if (file.getAbsolutePath().endsWith(".apk")) {
+                File propertiesFile = new File(file.getParentFile().getParentFile(),
+                        "project.properties");
+                try {
+                    boolean isLibrary = FileUtils.readFileToString(propertiesFile)
+                            .contains("android.library=true");
+                    if (isLibrary) {
+                        removeFiles.add(file);
+                    }
+                } catch (Exception e) {
+                    removeFiles.add(file);
+                }
+            }
+        }
+        files.removeAll(removeFiles);
         return files;
     }
 

@@ -37,6 +37,7 @@ class DeployStrategyIOs extends DeployStrategy {
         super(server, "ios", id, tag, prependNameToTag, build, listener);
         mIpaFile = ipaFile;
         mPlistFile = findPlistFile();
+        createManifest();
     }
 
     private File findPlistFile() {
@@ -71,7 +72,6 @@ class DeployStrategyIOs extends DeployStrategy {
     @Override
     public Part[] getParts() {
         if (mParts == null) {
-            createManifest();
             try {
                 mParts = new Part[] {
                         new StringPart("version", getVersion()),
