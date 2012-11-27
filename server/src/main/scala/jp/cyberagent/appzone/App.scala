@@ -25,7 +25,7 @@ import net.liftweb.mongodb.record.field.MongoMapField
 import net.liftweb.common.Box
 import scala.collection.immutable.Map
 
-case class App private() extends MongoRecord[App] {
+case class App private () extends MongoRecord[App] {
   def meta = App
 
   object id extends StringField(this, 20)
@@ -41,24 +41,25 @@ object App extends App with MongoMetaRecord[App]
 /////////////////////
 class ReleaseMap(rec: App) extends BsonRecordMapField[App, AppPlatformEntry](rec, AppPlatformEntry) {
   override def defaultValue = Map[String, AppPlatformEntry]()
-  def addApp(provider: String, token: AppPlatformEntry) {
-    this.set(this.value + (provider -> token))
+  def addApp(releaseId: String, record: AppPlatformEntry) {
+    this.set(this.value + (keyifyId(releaseId) -> record))
   }
-  def getApp(value: String): Box[AppPlatformEntry] = { 
-    Box(this.value.get(value))
+  def getApp(releaseId: String): Box[AppPlatformEntry] = {
+    Box(this.value.get(keyifyId(releaseId)))
   }
+  def keyifyId(id: String) = id.replace(".", "_");
 }
 /////////////////////
-class AppPlatformEntry private() extends BsonRecord[AppPlatformEntry] {
+class AppPlatformEntry private () extends BsonRecord[AppPlatformEntry] {
   def meta = AppPlatformEntry
-  
+
   object version extends StringField(this, 255)
   object versionCode extends IntField(this, 0)
   object lastUpdateDate extends StringField(this, 24)
-  
-  object releaseName extends StringField(this, 50)  { override def optional_? = true }
-  object releaseNotes extends StringField(this, 1024)  { override def optional_? = true }
-  
+
+  object releaseName extends StringField(this, 50) { override def optional_? = true }
+  object releaseNotes extends StringField(this, 1024) { override def optional_? = true }
+
   def setDateToNow() = lastUpdateDate.set(AppPlatformEntry.DATE_FORMAT.format(new Date))
   def incrementVersionCode() = versionCode.set(versionCode.get + 1)
 }
