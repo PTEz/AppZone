@@ -13,8 +13,8 @@ import java.util.zip.ZipFile;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
-import org.apache.commons.lang.exception.ExceptionUtils;
 
+import brut.androlib.AndrolibException;
 import brut.androlib.res.AndrolibResources;
 import brut.androlib.res.data.ResPackage;
 import brut.androlib.res.data.ResTable;
@@ -28,9 +28,9 @@ class DeployStrategyAndroid extends DeployStrategy {
     private final Part[] mParts;
 
     public DeployStrategyAndroid(final String server, final String id, final String tag,
-            final File apkFile, final AbstractBuild build, final BuildListener listener)
-            throws FileNotFoundException {
-        super(server, "android", id, tag, build, listener);
+            final boolean prependNameToTag, final File apkFile, final AbstractBuild build,
+            final BuildListener listener) throws FileNotFoundException {
+        super(server, "android", id, tag, prependNameToTag, build, listener);
         mApkFile = apkFile;
         mParts = new Part[] {
                 new StringPart("version", getVersion()),
@@ -45,29 +45,19 @@ class DeployStrategyAndroid extends DeployStrategy {
 
     @Override
     public String getVersion() {
-        try {
-            String version = getVersionStringFromManifest();
-
-            AndrolibResources res = new AndrolibResources();
-            ExtFile file = new ExtFile(mApkFile);
-            ResTable table = res.getResTable(file);
-            ResPackage defaultPackage = table.listMainPackages().iterator().next();
-
-            if (version.startsWith("resourceID 0x")) {
-                int resId = Integer.parseInt(version.substring(13), 16);
-                ResValue value = table.getValue(defaultPackage.getName(),
-                        "string", table.getResSpec(resId).getName());
-                return ((ResStringValue) value).encodeAsResXmlValue();
-            } else {
-                return version;
-            }
-        } catch (Exception e) {
-            getLogger().println(TAG + "Error: " + ExceptionUtils.getStackTrace(e));
+        String version = getStringFromManifest("versionName");
+        if (version != null) {
+            return version;
         }
         return super.getVersion();
     }
 
-    private String getVersionStringFromManifest() {
+    @Override
+    public String getDeployableName() {
+        return getStringFromManifest("android:label");
+    }
+
+    private String getStringFromManifest(final String name) {
         try {
             ZipFile zip = new ZipFile(mApkFile);
             ZipEntry mft = zip.getEntry("AndroidManifest.xml");
@@ -77,13 +67,30 @@ class DeployStrategyAndroid extends DeployStrategy {
             is.read(xml);
 
             String string = AndroidUtils.decompressXML(xml);
-            int start = string.indexOf("versionName=\"") + 13;
+            int start = string.indexOf(name + "=\"") + name.length() + 2;
             int end = string.indexOf("\"", start);
             String version = string.substring(start, end);
-            return version;
+
+            if (version.startsWith("resourceID 0x")) {
+                int resId = Integer.parseInt(version.substring(13), 16);
+                return getStringFromResource(resId);
+            } else {
+                return version;
+            }
         } catch (Exception e) {
             getLogger().println(TAG + "Error: " + e.getMessage());
         }
         return null;
+    }
+
+    private String getStringFromResource(final int resId) throws AndrolibException {
+        AndrolibResources res = new AndrolibResources();
+        ExtFile file = new ExtFile(mApkFile);
+        ResTable table = res.getResTable(file);
+        ResPackage defaultPackage = table.listMainPackages().iterator().next();
+
+        ResValue value = table.getValue(defaultPackage.getName(),
+                "string", table.getResSpec(resId).getName());
+        return ((ResStringValue) value).encodeAsResXmlValue();
     }
 }

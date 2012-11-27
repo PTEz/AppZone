@@ -15,18 +15,32 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 
 abstract class DeployStrategy {
     public static final String TAG = "[AppZone] ";
-    private final String mUrl;
+    private final String mServer;
+    private final String mType;
+    private final String mId;
+    private final String mTag;
+    private final boolean mPrependNameToTag;
     private final AbstractBuild mBuild;
     private final BuildListener mListener;
 
+    private String mUrl;
+
     public DeployStrategy(final String server, final String type, final String id,
-            final String tag, final AbstractBuild build, final BuildListener listener) {
-        mUrl = createAppUrl(server, type, id, tag);
-        mBuild = build;
+            final String tag, final boolean prependNameToTag, final AbstractBuild build,
+            final BuildListener listener) {
+        mServer = server;
+        mType = type;
+        mId = id;
+        mTag = tag;
         mListener = listener;
+        mPrependNameToTag = prependNameToTag;
+        mBuild = build;
     }
 
     public String getUrl() {
+        if (mUrl == null) {
+            mUrl = createAppUrl(mServer, mType, mId, mTag);
+        }
         return mUrl;
     }
 
@@ -60,17 +74,30 @@ abstract class DeployStrategy {
     }
 
     private String createAppUrl(final String server, final String type, final String id,
-            final String tag) {
+            String tag) {
         StringBuilder url = new StringBuilder(server);
         if (!server.endsWith("/")) {
             url.append("/");
         }
         url.append("app/" + id + "/" + type);
-        if (tag != null && !tag.trim().isEmpty()) {
-            url.append("/" + tag.trim());
+
+        tag = tag != null ? tag.trim() : "";
+
+        if (mPrependNameToTag || !tag.isEmpty()) {
+            url.append("/");
+
+            if (mPrependNameToTag) {
+                url.append(getDeployableName());
+                if (!tag.isEmpty()) {
+                    url.append("-");
+                }
+            }
+            url.append(tag);
         }
         return url.toString();
     }
 
     public abstract Part[] getParts();
+
+    public abstract String getDeployableName();
 }

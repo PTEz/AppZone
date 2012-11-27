@@ -9,6 +9,8 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Collection;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.Part;
@@ -26,24 +28,60 @@ import com.dd.plist.PropertyListParser;
 class DeployStrategyIOs extends DeployStrategy {
 
     private final File mIpaFile;
-    private final Part[] mParts;
+    private final File mPlistFile;
+    private Part[] mParts;
 
     public DeployStrategyIOs(final String server, final String id, final String tag,
-            final File ipaFile, final AbstractBuild build, final BuildListener listener)
-            throws FileNotFoundException {
-        super(server, "ios", id, tag, build, listener);
+            final boolean prependNameToTag, final File ipaFile, final AbstractBuild build,
+            final BuildListener listener) {
+        super(server, "ios", id, tag, prependNameToTag, build, listener);
         mIpaFile = ipaFile;
+        mPlistFile = findPlistFile();
+    }
 
-        createManifest();
-        mParts = new Part[] {
-                new StringPart("version", getVersion()),
-                new FilePart("ipa", ipaFile),
-                new FilePart("manifest", getManifestFile()),
-        };
+    private File findPlistFile() {
+        Collection<File> plistFiles = FileUtils.listFiles(
+                new File(getBuild().getWorkspace().getRemote()),
+                new AbstractFileFilter() {
+
+                    @Override
+                    public boolean accept(final File file) {
+                        if (file.getAbsolutePath().endsWith(".app/Info.plist")) {
+                            Pattern pattern = Pattern
+                                    .compile(".*\\/([^\\.\\/]+)\\.app\\/Info.plist");
+                            Matcher matcher = pattern.matcher(file.getAbsolutePath());
+                            return matcher.matches()
+                                    && mIpaFile.getName().startsWith(matcher.group(1));
+                        } else {
+                            return false;
+                        }
+                    }
+                },
+                FileFilterUtils.makeCVSAware(DirectoryFileFilter.DIRECTORY)
+                );
+        if (plistFiles.isEmpty()) {
+            return null;
+        } else if (plistFiles.size() > 1) {
+            getLogger().println(TAG + "Error: Found multiple Info.plist files in *.app folders.");
+            return null;
+        }
+        return plistFiles.iterator().next();
     }
 
     @Override
     public Part[] getParts() {
+        if (mParts == null) {
+            createManifest();
+            try {
+                mParts = new Part[] {
+                        new StringPart("version", getVersion()),
+                        new FilePart("ipa", mIpaFile),
+                        new FilePart("manifest", getManifestFile()),
+                };
+            } catch (FileNotFoundException e) {
+                getLogger().println(TAG + "Error: " + e.getMessage());
+            }
+        }
         return mParts;
     }
 
@@ -63,29 +101,14 @@ class DeployStrategyIOs extends DeployStrategy {
     }
 
     private boolean createManifest() {
-        Collection<File> plistFiles = FileUtils.listFiles(
-                new File(getBuild().getWorkspace().getRemote()),
-                new AbstractFileFilter() {
-
-                    @Override
-                    public boolean accept(final File file) {
-                        return file.getAbsolutePath().endsWith(".app/Info.plist");
-                    }
-                },
-                FileFilterUtils.makeCVSAware(DirectoryFileFilter.DIRECTORY)
-                );
-        if (plistFiles.isEmpty()) {
-            return false;
-        } else if (plistFiles.size() > 1) {
-            getLogger().println(TAG + "Error: Found multiple Info.plist files in *.app folders.");
-            return false;
-        }
-
         File manifestFile = getManifestFile();
         getLogger().println(TAG + "Creating manifest: " + manifestFile.getName());
         try {
-            NSDictionary rootDict = (NSDictionary) PropertyListParser.parse(
-                    plistFiles.iterator().next());
+            if (mPlistFile == null) {
+                getLogger().println(TAG + "No Info.plist file found. Aborting.");
+                return false;
+            }
+            NSDictionary rootDict = (NSDictionary) PropertyListParser.parse(mPlistFile);
             String bundleName = rootDict.objectForKey("CFBundleName")
                     .toString();
             String bundleIdentifier = rootDict.objectForKey("CFBundleIdentifier")
@@ -116,5 +139,19 @@ class DeployStrategyIOs extends DeployStrategy {
     private File getManifestFile() {
         String path = mIpaFile.getAbsolutePath();
         return new File(path.substring(0, path.length() - 4) + ".manifest");
+    }
+
+    @Override
+    public String getDeployableName() {
+        if (mPlistFile == null) {
+            getLogger().println(TAG + "No Info.plist file found. Aborting.");
+            return null;
+        }
+        try {
+            NSDictionary rootDict = (NSDictionary) PropertyListParser.parse(mPlistFile);
+            return rootDict.objectForKey("CFBundleDisplayName").toString();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

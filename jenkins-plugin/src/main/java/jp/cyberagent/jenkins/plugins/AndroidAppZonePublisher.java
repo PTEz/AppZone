@@ -15,6 +15,7 @@ import hudson.util.FormValidation;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.servlet.ServletException;
 
@@ -39,12 +40,15 @@ public class AndroidAppZonePublisher extends Notifier {
     private final String id;
     private final String tag;
 
+    private final boolean prependNameToTag;
+
     // Fields in config.jelly must match the parameter names in the
     // "DataBoundConstructor"
     @DataBoundConstructor
-    public AndroidAppZonePublisher(final String id, final String tag) {
+    public AndroidAppZonePublisher(final String id, final String tag, final boolean prependNameToTag) {
         this.id = id;
         this.tag = tag;
+        this.prependNameToTag = prependNameToTag;
     }
 
     public String getId() {
@@ -53,6 +57,10 @@ public class AndroidAppZonePublisher extends Notifier {
 
     public String getTag() {
         return tag;
+    }
+
+    public boolean getPrependNameToTag() {
+        return prependNameToTag;
     }
 
     public FormValidation doCheckId(@QueryParameter
@@ -67,6 +75,7 @@ public class AndroidAppZonePublisher extends Notifier {
     @Override
     public boolean perform(final AbstractBuild build, final Launcher launcher,
             final BuildListener listener) {
+        listener.getLogger().println(TAG + "Prepend: " + prependNameToTag);
         String server = getDescriptor().getServer();
         if (server == null || server.length() == 0) {
             listener.getLogger().println(TAG +
@@ -79,38 +88,43 @@ public class AndroidAppZonePublisher extends Notifier {
             listener.getLogger().println(TAG + "No file to puslish found. Skip.");
             return true;
         }
-        File file = files.iterator().next();
-        String fileName = file.getName();
+        Iterator<File> fileIterator = files.iterator();
+        while (fileIterator.hasNext()) {
+            try {
+                File file = fileIterator.next();
+                String fileName = file.getName();
+                DeployStrategy deploy;
+                listener.getLogger().println(TAG + "File: " + fileName);
+                if (fileName.endsWith(".apk")) {
+                    deploy = new DeployStrategyAndroid(server, id, tag, prependNameToTag, file,
+                            build,
+                            listener);
+                } else if (fileName.endsWith(".ipa")) {
+                    deploy = new DeployStrategyIOs(server, id, tag, prependNameToTag, file, build,
+                            listener);
+                } else {
+                    return false;
+                }
+                listener.getLogger().println(TAG + "Version: " + deploy.getVersion());
+                listener.getLogger().println(TAG + "Publishing to: " + deploy.getUrl());
 
-        try {
-            DeployStrategy deploy;
-            listener.getLogger().println(TAG + "File: " + fileName);
-            if (fileName.endsWith(".apk")) {
-                deploy = new DeployStrategyAndroid(server, id, tag, file, build, listener);
-            } else if (fileName.endsWith(".ipa")) {
-                deploy = new DeployStrategyIOs(server, id, tag, file, build, listener);
-            } else {
+                HttpClient httpclient = new HttpClient();
+                PostMethod filePost = new PostMethod(deploy.getUrl());
+                filePost.setRequestEntity(
+                        new MultipartRequestEntity(deploy.getParts(), filePost.getParams()));
+                httpclient.executeMethod(filePost);
+                int statusCode = filePost.getStatusCode();
+                if (statusCode < 200 || statusCode > 299) {
+                    String body = filePost.getResponseBodyAsString();
+                    listener.getLogger().println(TAG + "Response (" + statusCode + "):" + body);
+                    return false;
+                }
+            } catch (IOException e) {
+                listener.getLogger().print(e.getMessage());
                 return false;
             }
-            listener.getLogger().println(TAG + "Version: " + deploy.getVersion());
-            listener.getLogger().println(TAG + "Publishing to: " + deploy.getUrl());
-
-            HttpClient httpclient = new HttpClient();
-            PostMethod filePost = new PostMethod(deploy.getUrl());
-            filePost.setRequestEntity(
-                    new MultipartRequestEntity(deploy.getParts(), filePost.getParams()));
-            httpclient.executeMethod(filePost);
-            int statusCode = filePost.getStatusCode();
-            if (statusCode < 200 || statusCode > 299) {
-                String body = filePost.getResponseBodyAsString();
-                listener.getLogger().println(TAG + "Response (" + statusCode + "):" + body);
-                return false;
-            }
-            return true;
-        } catch (IOException e) {
-            listener.getLogger().print(e.getMessage());
         }
-        return false;
+        return true;
     }
 
     private Collection<File> getPossibleAppFiles(final AbstractBuild build) {
