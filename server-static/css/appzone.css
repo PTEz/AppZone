@@ -1,5 +1,12 @@
 body {
 	margin: 10px;
+	font-family: Arial;
+}
+h1,h2,h3,h4 {
+	font-family: Arial;
+}
+a {
+	text-decoration: none;
 }
 
 a.app {
@@ -7,70 +14,56 @@ a.app {
 }
 
 div.app {
-	-webkit-border-image: none;
-	-webkit-box-shadow: rgba(255, 255, 255, 0.2) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.0470588) 0px 1px 2px 0px;
-	background-color: #006DCC;
-	background-image: -webkit-linear-gradient(top, #08C, #04C);
-	background-repeat: repeat-x;
-	border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-
+	border: 1px solid #777;
 	border-radius: 5px;
-	border-bottom-style: solid;
-	border-bottom-width: 1px;
-	border-left-style: solid;
-	border-left-width: 1px;
-	border-right-style: solid;
-	border-right-width: 1px;
-	border-top-style: solid;
-	border-top-width: 1px;
-	box-shadow: rgba(255, 255, 255, 0.2) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.0470588) 0px 1px 2px 0px;
-	box-sizing: border-box;
-	padding-bottom: 9px;
-	padding-top: 9px;
-	vertical-align: middle;
-
-	text-align: center;
-	color: white;
 }
-
 .app .name {
+	margin: 3px;
 	font-size: 18px;
 	font-weight: bold;
-	text-shadow: rgba(0, 0, 0, 0.247059) 0px -1px 0px;
 }
 .app a {
 	display: block;
-	color: white;
-}
-.app .name a {
-	margin-bottom: 7px;
 }
 
+.app .releases {
+	border-top: 1px solid #777;
+	background: #f2f2f2;
+}
 .app ul {
 	vertical-align: top;
 	display: inline-block;
-	margin: 0px;
+	margin: 0;
+}
+.app ul li {
+	margin: 0;
 }
 .app ul li .release {
 	display: inline-block;
-	padding: 5px 5px 5px 50px;
-	margin: 5px;
+	padding: 0 0 0 30px;
 	border-radius: 3px;
 	background-color:rgba(255,255,255,0.2);
 	background-repeat:no-repeat;
-	background-position: 5px center;
+	background-position: 3px center;
 	text-decoration: none;
 
 	cursor: hand;
 	cursor: pointer;
 }
-.app ul.android .release {
-	background-image:url('../img/android.png');
+.app ul li:hover {
+	background-color: #fff;
 }
-.app ul.ios .release {
+.app .android .release {
+	background-image:url('../img/android.png');
+	background-position: 6px center;
+}
+.app .ios .release {
 	background-image:url('../img/ios.png');
 }
 
+.app .id {
+	display: inline-block;
+}
 .app .version {
 	display: block;
 	font-weight: none;
@@ -78,9 +71,6 @@ div.app {
 	text-decoration: none;
 	text-shadow: rgba(0, 0, 0, 0.247059) 0px -1px 0px;
 	display: inline;
-}
-.app .version:before {
-	content:"Version: ";
 }
 .app .versionCode {
 	font-size: 12px;
@@ -91,7 +81,8 @@ div.app {
 .app .versionCode:before { content: "("; }
 .app .versionCode:after { content: ")"; }
 .app .lastUpdateDate {
-	font-size: 11px;
+	margin-top: -5px;
+	font-size: 10px;
 	font-style: italic;
 	font-weight: normal;
 	text-decoration: none;
