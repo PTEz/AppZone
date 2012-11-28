@@ -29,6 +29,7 @@ import scala.io.Source
 import net.liftweb.common.Full
 import scala.collection.mutable.HashMap
 import com.mongodb.DBObject
+import net.liftweb.json.JObject
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport with CorsSupport {
 
@@ -57,6 +58,9 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       resourceNotFound()
     else
       Json(res.get.asJValue)
+  }
+  delete("/app/:id") {
+    App.delete(("id" -> params("id")))
   }
 
   get("/app/:id/android") {
