@@ -35,7 +35,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   val DEFAULT_RELEASE = "_default"
 
   get("/apps") {
-    Json(App.findAll.sortBy(app => app.name.get).map(p => p.asJValue))
+    Json(App.findAll.sortBy(app => app.name.get.toLowerCase()).map(p => p.asJValue))
   }
 
   post("/app") {
