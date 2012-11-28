@@ -32,8 +32,8 @@ import com.mongodb.DBObject
 import net.liftweb.json.JObject
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport with CorsSupport {
-
   val DEFAULT_RELEASE = "_default"
+
   ////////
   // /apps
   ////////
@@ -97,9 +97,9 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   post("/app/:id/android/:releaseId") {
     publishAndroid(params("id"), params("releaseId"))
   }
-  
+
   delete("/app/:id/android/:releaseId") {
-    App.update(("id" -> params("id")), ("$unset" -> ("android."+params("releaseId") -> "")))
+    App.update(("id" -> params("id")), ("$unset" -> ("android." + params("releaseId") -> "")))
   }
 
   def publishAndroid(appId: String, releaseId: String) = {
@@ -122,9 +122,9 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   post("/app/:id/ios/:releaseId") {
     publishIOs(params("id"), params("releaseId"))
   }
-  
+
   delete("/app/:id/ios/:releaseId") {
-    App.update(("id" -> params("id")), ("$unset" -> ("ios."+params("releaseId") -> "")))
+    App.update(("id" -> params("id")), ("$unset" -> ("ios." + params("releaseId") -> "")))
   }
 
   def publishIOs(appId: String, releaseId: String) = {
@@ -236,6 +236,9 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   get("/app/:id/feedback") {
     Json(Feedback.findAll(("appId" -> params("id")), ("date" -> -1)).map(p => p.asJValue))
   }
+
+  // For CORS
+  options("*") {handlePreflightRequest()}
 
   notFound {
     // remove content type in case it was set through an action

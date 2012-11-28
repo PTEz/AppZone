@@ -17,6 +17,7 @@ class Scalatra extends LifeCycle {
     configureMongoDb
     // Mount one or more servlets
     // context.mount(new AppZoneServlet, "/*")
+    
   }
 
   def configureMongoDb = {

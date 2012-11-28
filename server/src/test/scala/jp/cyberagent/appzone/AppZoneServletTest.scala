@@ -131,4 +131,11 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     }
     testDelete("ios", releaseId)
   }
+  test("OPTIONS /app/:id should respond with cors information") {
+    options("/app/" + app.id.get) {
+      status should equal(200)
+      header.contains("Access-Control-Allow-Origin") should equal(true)
+      header.contains("Access-Control-Allow-Methods") should equal(true)
+    }
+  }
 }
