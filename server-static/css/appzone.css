@@ -16,11 +16,20 @@ a.app {
 div.app {
 	border: 1px solid #777;
 	border-radius: 5px;
+	position: relative;
 }
 .app .name {
 	margin: 3px;
 	font-size: 18px;
 	font-weight: bold;
+}
+.app .delete {
+	position: absolute;
+	right: 2px;
+	top: 2px;
+	cursor: pointer;
+	font-size: 9px;
+	color: red;
 }
 .app a {
 	display: block;
@@ -34,12 +43,17 @@ div.app {
 	vertical-align: top;
 	display: inline-block;
 	margin: 0;
+	width: 50%;
+}
+.app ul.fill {
+	width: 100%;
 }
 .app ul li {
 	margin: 0;
+	width: 100%;
 }
 .app ul li .release {
-	display: inline-block;
+	display: block;
 	padding: 0 0 0 30px;
 	border-radius: 3px;
 	background-color:rgba(255,255,255,0.2);
@@ -49,6 +63,7 @@ div.app {
 
 	cursor: hand;
 	cursor: pointer;
+	position: relative;
 }
 .app ul li:hover {
 	background-color: #fff;
@@ -61,32 +76,37 @@ div.app {
 	background-image:url('../img/ios.png');
 }
 
-.app .id {
+.release .id {
 	display: inline-block;
 }
-.app .version {
-	display: block;
-	font-weight: none;
+.release .version {
+	display: inline-block;
+	font-weight: normal;
 	font-size: 12px;
 	text-decoration: none;
 	text-shadow: rgba(0, 0, 0, 0.247059) 0px -1px 0px;
-	display: inline;
 }
-.app .versionCode {
+.release .versionCode {
 	font-size: 12px;
 	text-decoration: none;
 	text-shadow: rgba(0, 0, 0, 0.247059) 0px -1px 0px;
-	display: inline;
+	display: inline-block;
 }
-.app .versionCode:before { content: "("; }
-.app .versionCode:after { content: ")"; }
-.app .lastUpdateDate {
+.release .versionCode:before { content: "("; }
+.release .versionCode:after { content: ")"; }
+.release .lastUpdateDate {
 	margin-top: -5px;
 	font-size: 10px;
 	font-style: italic;
 	font-weight: normal;
 	text-decoration: none;
 	display: block;
+}
+.release .delete {
+	position: absolute;
+	display: inline-block;
+	right: 2px;
+	top: 8px;
 }
 
 #feedbacks label {

@@ -21,9 +21,9 @@
     <div class="app">
       <label class="name"><a href="#/app/<%- id %>"><%- name %></a></label>
       <div class="releases">
-        <ul class="android"></ul>
-        <ul class="ios"></ul>
+        <ul class="android"></ul><ul class="ios"></ul>
       </div>
+      <div class="delete all">del</div>
     </div>
   </script>
 
@@ -34,6 +34,7 @@
       <% } %>
       <span class="version"><%- version %></span>
       <span class="lastUpdateDate"><%- moment(lastUpdateDate).fromNow() %></span>
+      <div class="delete">del</div>
     </a>
   </script>
 

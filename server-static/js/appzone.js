@@ -35,6 +35,9 @@ var AppItemList = Backbone.Collection.extend({
 var AppItemView = Backbone.View.extend({
   tagName:  'li',
   template: _.template($('#app-template').html()),
+  events: {
+    'click .delete.all': 'deleteApp'
+  },
   render: function() {
     var app = this.model;
     this.$el.html(this.template(app.toJSON()));
@@ -46,24 +49,44 @@ var AppItemView = Backbone.View.extend({
       var view2 = new ReleaseItemView({model: app.attributes.ios[j]});
       this.$('.ios').append(view2.render().el);
     }
-    //if (app.attributes.android) {
-    //  this.$('.android a').attr('href', SERVER + 'app/' + app.id + '/android');
-    //}
-    //if (app.attributes.ios) {
-    //  this.$('.ios a').attr('href', SERVER + 'app/' + app.id + '/ios');
-    //}
+    if (app.attributes.android.length > 0 && app.attributes.ios.length === 0) {
+      this.$('.android').addClass('fill');
+      this.$('.ios').hide();
+    }
+    if (app.attributes.ios.length > 0 && app.attributes.android.length === 0) {
+      this.$('.ios').addClass('fill');
+      this.$('.android').hide();
+    }
     return this;
+  },
+  deleteApp: function() {
+    if(prompt('Type "DELETE" to really delete') === 'DELETE') {
+      var url = SERVER + 'app/' + this.model.id;
+      $.ajax({type: 'DELETE', url: url});
+      this.$el.remove();
+    }
+    return false;
   }
 });
 
 var ReleaseItemView = Backbone.View.extend({
   tagName: 'li',
   template: _.template($('#release-template').html()),
+  events: {
+    'click .delete': 'deleteRelease'
+  },
   render: function() {
-    console.log(this);
     this.$el.html(this.template(this.model));
     this.$('a.download').attr('href', SERVER + 'app/' + this.model.appId + '/' +this.model.platform + '/' + this.model.id);
     return this;
+  },
+  deleteRelease: function() {
+    if(prompt('Type "DELETE" to really delete') === 'DELETE') {
+      var url = SERVER + 'app/' + this.model.appId + '/' + this.model.platform + '/' + this.model.id;
+      $.ajax({type: 'DELETE', url: url});
+      this.$el.remove();
+    }
+    return false;
   }
 });
 
