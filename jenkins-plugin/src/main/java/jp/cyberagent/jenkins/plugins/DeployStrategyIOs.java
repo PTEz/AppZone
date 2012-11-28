@@ -113,8 +113,9 @@ class DeployStrategyIOs extends DeployStrategy {
                     .toString();
             String bundleIdentifier = rootDict.objectForKey("CFBundleIdentifier")
                     .toString();
-            String bundleShortVersion = rootDict.objectForKey("CFBundleShortVersionString")
+            String bundleShortVersionString = rootDict.objectForKey("CFBundleShortVersionString")
                     .toString();
+            String bundleVersion = rootDict.objectForKey("CFBundleVersion").toString();
 
             InputStream inputStream = getClass().getResourceAsStream(
                     "/OTAManifestTemplate.plist");
@@ -126,7 +127,7 @@ class DeployStrategyIOs extends DeployStrategy {
             manifest = manifest.replace("${CFBundleName}", bundleName);
             manifest = manifest.replace("${CFBundleIdentifier}", bundleIdentifier);
             manifest = manifest.replace("${CFBundleShortVersionString}",
-                    bundleShortVersion);
+                    bundleShortVersionString + " (" + bundleVersion + ")");
             FileUtils.writeStringToFile(manifestFile, manifest);
         } catch (Exception e) {
             getLogger().println(
