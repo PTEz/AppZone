@@ -34,22 +34,11 @@ import net.liftweb.json.JObject
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport with CorsSupport {
 
   val DEFAULT_RELEASE = "_default"
-
+  ////////
+  // /apps
+  ////////
   get("/apps") {
     Json(App.findAll.sortBy(app => app.name.get.toLowerCase()).map(p => p.asJValue))
-  }
-
-  post("/app") {
-    val app = createApp(params.get("id").getOrElse(""), params.get("name").getOrElse(""))
-    Json(app.asJValue)
-  }
-  
-  def createApp(id: String, name: String) = {
-    val app = App.createRecord
-    app.id.set(id)
-    app.name.set(name)
-    App.update(("id" -> app.id.asJValue), app, Upsert)
-    app
   }
 
   get("/app/:id") {
@@ -59,15 +48,31 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     else
       Json(res.get.asJValue)
   }
+  post("/app") {
+    val app = createApp(params.get("id").getOrElse(""), params.get("name").getOrElse(""))
+    Json(app.asJValue)
+  }
+
+  def createApp(id: String, name: String) = {
+    val app = App.createRecord
+    app.id.set(id)
+    app.name.set(name)
+    App.update(("id" -> app.id.asJValue), app, Upsert)
+    app
+  }
+
   delete("/app/:id") {
     App.delete(("id" -> params("id")))
   }
 
+  ///////////////////
+  // /app/:id/android
+  ///////////////////
   get("/app/:id/android") {
     getAndroidApk(params("id"), DEFAULT_RELEASE)
   }
-  get("/app/:id/android/:id2") {
-    getAndroidApk(params("id"), params("id2"))
+  get("/app/:id/android/:releaseId") {
+    getAndroidApk(params("id"), params("releaseId"))
   }
 
   def getAndroidApk(appId: String, releaseId: String) = {
@@ -89,16 +94,12 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     publishAndroid(params("id"), DEFAULT_RELEASE)
   }
 
-  post("/app/:id/android/:id2") {
-    publishAndroid(params("id"), params("id2"))
+  post("/app/:id/android/:releaseId") {
+    publishAndroid(params("id"), params("releaseId"))
   }
-
-  post("/app/:id/ios") {
-    publishIOs(params("id"), DEFAULT_RELEASE)
-  }
-
-  post("/app/:id/ios/:id2") {
-    publishIOs(params("id"), params("id2"))
+  
+  delete("/app/:id/android/:releaseId") {
+    App.update(("id" -> params("id")), ("$unset" -> ("android."+params("releaseId") -> "")))
   }
 
   def publishAndroid(appId: String, releaseId: String) = {
@@ -109,6 +110,21 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       case None =>
         BadRequest("apk (file) parameter required")
     }
+  }
+
+  ///////////////////
+  // /app/:id/ios
+  ///////////////////
+  post("/app/:id/ios") {
+    publishIOs(params("id"), DEFAULT_RELEASE)
+  }
+
+  post("/app/:id/ios/:releaseId") {
+    publishIOs(params("id"), params("releaseId"))
+  }
+  
+  delete("/app/:id/ios/:releaseId") {
+    App.update(("id" -> params("id")), ("$unset" -> ("ios."+params("releaseId") -> "")))
   }
 
   def publishIOs(appId: String, releaseId: String) = {
@@ -135,9 +151,9 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       record.setDateToNow
       releaseList.addApp(releaseId, record)
       App.update(("id" -> appId), app)
-	  Json(app.asJValue)
+      Json(app.asJValue)
     }
-    
+
     val appRes = App.find(("id" -> appId))
     appRes match {
       case Full(app) => updateApp(app)
@@ -149,8 +165,8 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     getIOsItmsServices(params("id"), DEFAULT_RELEASE)
   }
 
-  get("/app/:id/ios/:id2") {
-    getIOsItmsServices(params("id"), params("id2"))
+  get("/app/:id/ios/:releaseId") {
+    getIOsItmsServices(params("id"), params("releaseId"))
   }
 
   def getIOsItmsServices(appId: String, releaseId: String) = {
@@ -162,8 +178,8 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     getIOsManifest(params("id"), DEFAULT_RELEASE)
   }
 
-  get("/app/:id/ios/:id2/manifest") {
-    getIOsManifest(params("id"), params("id2"))
+  get("/app/:id/ios/:releaseId/manifest") {
+    getIOsManifest(params("id"), params("releaseId"))
   }
 
   def getIOsManifest(appId: String, releaseId: String) = {
@@ -187,8 +203,8 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     getIOsIpa(params("id"), DEFAULT_RELEASE)
   }
 
-  get("/app/:id/ios/:id2/ipa") {
-    getIOsIpa(params("id"), params("id2"))
+  get("/app/:id/ios/:releaseId/ipa") {
+    getIOsIpa(params("id"), params("releaseId"))
   }
 
   def getIOsIpa(appId: String, releaseId: String) = {

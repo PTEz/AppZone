@@ -22,6 +22,9 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
   // `MyScalatraServlet` is your app which extends ScalatraServlet
   addServlet(classOf[AppZoneServlet], "/*")
   val DEFAULT_RELEASE_ID = "_default"
+  val ANDROID_APK_FILE = new File(getClass.getResource("/android.apk").toURI())
+  val IOS_IPA_FILE = new File(getClass.getResource("/ios.ipa").toURI())
+  val IOS_MANIFEST_FILE = new File(getClass.getResource("/ios.manifest").toURI())
 
   val app = App.createRecord
   app.id.set("testid")
@@ -64,30 +67,35 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     }
   }
 
-  def checkAppsContainsAndroidRelease(releaseId: String) = {
+  def checkAppsContainsRelease(platform: String, releaseId: String) = {
     get("/apps") {
       val apps = JsonParser.parse(body).asInstanceOf[JArray]
       apps.values.length should equal(2)
-      val android = apps(1).asInstanceOf[JObject].values("android").asInstanceOf[Map[String, AppPlatformEntry]]
+      val android = apps(1).asInstanceOf[JObject].values(platform).asInstanceOf[Map[String, AppPlatformEntry]]
       android.contains(releaseId) should equal(true)
       val release = android(releaseId).asInstanceOf[Map[String, Object]]
       release("versionCode") should equal(1)
     }
   }
   test("POST /app/:id/android should add the release") {
-    val apkFile = new File(getClass.getResource("/android.apk").toURI())
-    post("/app/testid/android", Map("version" -> "1.0"), Map("apk" -> apkFile)) {
+    post("/app/testid/android", Map("version" -> "1.0"), Map("apk" -> ANDROID_APK_FILE)) {
       status should equal(200)
     }
-    checkAppsContainsAndroidRelease(DEFAULT_RELEASE_ID)
+    checkAppsContainsRelease("android", DEFAULT_RELEASE_ID)
   }
   test("POST /app/:id/android/:releaseId should add the release with given releaseId") {
     val releaseId = "production"
-    val apkFile = new File(getClass.getResource("/android.apk").toURI())
-    post("/app/testid/android/" + releaseId, Map("version" -> "1.0"), Map("apk" -> apkFile)) {
+    post("/app/" + app.id.get + "/android/" + releaseId, Map("version" -> "1.0"), Map("apk" -> ANDROID_APK_FILE)) {
       status should equal(200)
     }
-    checkAppsContainsAndroidRelease(releaseId)
+    checkAppsContainsRelease("android", releaseId)
+  }
+  test("POST /app/:id/ios/:releaseId should add the release with given releaseId") {
+    val releaseId = "production"
+    post("/app/" + app.id.get + "/ios/" + releaseId, Map("version" -> "1.0"), Map("ipa" -> IOS_IPA_FILE, "manifest" -> IOS_MANIFEST_FILE)) {
+      status should equal(200)
+    }
+    checkAppsContainsRelease("ios", releaseId)
   }
   test("DELETE /app/:id should delete the app") {
     delete("/app/" + app2.id.get) {
@@ -98,5 +106,29 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
       apps.values.length should equal(1)
       val android = apps(0).asInstanceOf[JObject].values("id") should equal(app.id.get)
     }
+  }
+  def testDelete(platform: String, releaseId: String) {
+    delete("/app/" + app.id.get + "/"+platform+"/" + releaseId) {
+      status should equal(200)
+    }
+    get("/app/" + app.id.get) {
+      val jsonApp = JsonParser.parse(body).asInstanceOf[JObject]
+      val android = jsonApp.values(platform).asInstanceOf[Map[String, AppPlatformEntry]]
+      android.contains(releaseId) should equal(false)
+    }
+  }
+  test("DELETE /app/:id/android/:releaseId should delete the release") {
+    val releaseId = "development"
+    post("/app/" + app.id.get + "/android/" + releaseId, Map("version" -> "1.0"), Map("apk" -> ANDROID_APK_FILE)) {
+      status should equal(200)
+    }
+    testDelete("android", releaseId)
+  }
+  test("DELETE /app/:id/ios/:releaseId should delete the release") {
+    val releaseId = "development"
+    post("/app/" + app.id.get + "/ios/" + releaseId, Map("version" -> "1.0"), Map("ipa" -> IOS_IPA_FILE, "manifest" -> IOS_MANIFEST_FILE)) {
+      status should equal(200)
+    }
+    testDelete("ios", releaseId)
   }
 }
