@@ -4,7 +4,6 @@ import javax.servlet.ServletContext
 import com.mongodb.Mongo
 import net.liftweb.mongodb.MongoDB
 import net.liftweb.mongodb.DefaultMongoIdentifier
-import net.liftweb.mongodb.DefaultMongoIdentifier
 import com.mongodb.ServerAddress
 import net.liftweb.util.Props
 
@@ -15,16 +14,15 @@ import net.liftweb.util.Props
  */
 class Scalatra extends LifeCycle {
   override def init(context: ServletContext) {
-	configureMongoDb
+    configureMongoDb
     // Mount one or more servlets
     // context.mount(new AppZoneServlet, "/*")
   }
-  
+
   def configureMongoDb = {
     val srvr = new ServerAddress(
-       Props.get("mongo.host", "127.0.0.1"),
-       Props.getInt("mongo.port", 27017)
-    )
+      Props.get("mongo.host", "127.0.0.1"),
+      Props.getInt("mongo.port", 27017))
     MongoDB.defineDb(DefaultMongoIdentifier, new Mongo(srvr), "appzone")
   }
 }
