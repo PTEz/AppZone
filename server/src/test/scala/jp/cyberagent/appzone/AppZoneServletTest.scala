@@ -143,7 +143,7 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     get("/app/" + app.id.get) {
       val jsonApp = JsonParser.parse(body).asInstanceOf[JObject]
       val android = jsonApp.values(platform).asInstanceOf[List[AppPlatformEntry]]
-      android.contains(releaseId) should equal(false)
+      android.length should equal(0)
     }
   }
   test("DELETE /app/:id/android/:releaseId should delete the release") {

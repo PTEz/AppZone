@@ -99,7 +99,14 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   delete("/app/:id/android/:releaseId") {
-    App.update(("id" -> params("id")), ("$unset" -> ("android." + params("releaseId") -> "")))
+    val appBox = App.find("id" -> params("id"))
+    appBox match {
+      case Full(app) => {
+        app.android.deleteRelease(params("releaseId"))
+        App.update("id" -> params("id"), app)
+      }
+      case _ => resourceNotFound()
+    }
   }
 
   def publishAndroid(appId: String, releaseId: String) = {
@@ -124,7 +131,14 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   delete("/app/:id/ios/:releaseId") {
-    App.update(("id" -> params("id")), ("$unset" -> ("ios." + params("releaseId") -> "")))
+    val appBox = App.find("id" -> params("id"))
+    appBox match {
+      case Full(app) => {
+        app.ios.deleteRelease(params("releaseId"))
+        App.update("id" -> params("id"), app)
+      }
+      case _ => resourceNotFound()
+    }
   }
 
   def publishIOs(appId: String, releaseId: String) = {

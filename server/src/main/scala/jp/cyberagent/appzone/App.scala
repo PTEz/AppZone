@@ -40,17 +40,6 @@ case class App private () extends MongoRecord[App] {
 object App extends App with MongoMetaRecord[App]
 
 /////////////////////
-class ReleaseMap(rec: App) extends BsonRecordMapField[App, AppPlatformEntry](rec, AppPlatformEntry) {
-  override def defaultValue = Map[String, AppPlatformEntry]()
-  def addApp(releaseId: String, record: AppPlatformEntry) {
-    this.set(this.value + (keyifyId(releaseId) -> record))
-  }
-  def getApp(releaseId: String): Box[AppPlatformEntry] = {
-    Box(this.value.get(keyifyId(releaseId)))
-  }
-  def keyifyId(id: String) = id.replace(".", "_");
-}
-/////////////////////
 class ReleaseList(rec: App) extends BsonRecordListField[App, AppPlatformEntry](rec, AppPlatformEntry) {
   override def defaultValue = List[AppPlatformEntry]()
   def addRelease(releaseId: String, record: AppPlatformEntry) {
@@ -64,6 +53,9 @@ class ReleaseList(rec: App) extends BsonRecordListField[App, AppPlatformEntry](r
   }
   def getRelease(releaseId: String): Box[AppPlatformEntry] = {
     this.value.find((release) => release.id.value == releaseId)
+  }
+  def deleteRelease(releaseId: String) {
+    this.set(this.value.filter(release => release.id.get != releaseId))
   }
   def keyifyId(id: String) = id.replace(".", "_");
 }
