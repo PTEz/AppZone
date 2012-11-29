@@ -93,7 +93,7 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
       val android = testApp.values("android").asInstanceOf[Map[String, AppPlatformEntry]]
       android.contains(releaseId) should equal(true)
       val release = android(releaseId).asInstanceOf[Map[String, Object]]
-      release("changelog") should equal("[1]\nSome change (username)")
+      release("changelog") should equal("[1.0]\nSome change (username)")
     }
   }
   test("POST /app/:id/android should add changelog to top") {
@@ -109,7 +109,7 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
       val android = testApp.values("android").asInstanceOf[Map[String, AppPlatformEntry]]
       android.contains(releaseId) should equal(true)
       val release = android(releaseId).asInstanceOf[Map[String, Object]]
-      release("changelog") should equal("[2]\nSome other change (username)\n[1]\nSome change (username)")
+      release("changelog") should equal("[1.1]\nSome other change (username)\n[1.0]\nSome change (username)")
     }
   }
   test("POST /app/:id/android/:releaseId should add the release with given releaseId") {

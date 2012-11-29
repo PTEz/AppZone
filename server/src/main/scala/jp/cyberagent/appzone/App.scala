@@ -64,7 +64,7 @@ class AppPlatformEntry private () extends BsonRecord[AppPlatformEntry] {
   def setDateToNow() = lastUpdateDate.set(AppPlatformEntry.DATE_FORMAT.format(new Date))
   def incrementVersionCode() = versionCode.set(versionCode.get + 1)
   def addChangeLog(change: String) {
-    var newChangeLog = "[" + versionCode.get + "]\n" + change
+    var newChangeLog = "[" + version.get + "]\n" + change
     if (changelog.get.length() > 0)
       newChangeLog = newChangeLog + "\n" +changelog.get
       if (newChangeLog.length() > 2000) 
