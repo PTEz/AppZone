@@ -9,22 +9,19 @@ var AppItem = Backbone.Model.extend({
   },
   parse: function(data) {
     function doParse(name) {
-      var items = [];
-      var keys = _.keys(data[name]);
-      for (var i = 0; i < keys.length; i++) {
-        var item = _.clone(data[name][keys[i]]);
+      for (var i = 0; i < data[name].length; i++) {
+        var item = data[name][i];
         item.appId = data.id;
-        item.id = keys[i];
         item.platform = name;
         var changelog = item.changelog ? item.changelog.split('\n', 2) : [];
         item.changelogpreview = (changelog.length > 1 ? changelog[1] + ' ...' : '');
-        items.push(item);
       }
-      return _.sortBy(items, function(item) { return item.id; } );
+      return _.sortBy(data[name], function(item) { return item.id; } );
     }
 
     data.ios = doParse('ios');
     data.android = doParse('android');
+    console.log(data);
     return data;
   }
 });
