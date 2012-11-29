@@ -82,6 +82,9 @@ public class AndroidAppZonePublisher extends Notifier {
         StringBuilder changeLog = new StringBuilder();
         for (Object changeObject : build.getChangeSet().getItems()) {
             ChangeLogSet.Entry change = (ChangeLogSet.Entry) changeObject;
+            if (changeLog.length() > 0) {
+                changeLog.append("\n");
+            }
             changeLog.append(change.getMsg() + " (" + change.getAuthor().getDisplayName() + ")");
         }
         String server = getDescriptor().getServer();
