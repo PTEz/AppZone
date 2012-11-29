@@ -29,7 +29,10 @@ var AppItem = Backbone.Model.extend({
 
 var AppItemList = Backbone.Collection.extend({
   model: AppItem,
-  url: SERVER + 'apps'
+  url: SERVER + 'apps',
+  parse: function(items) {
+    return _.filter(items, function(item) { return item.id.indexOf('_') !== 0; });
+  }
 });
 
 var AppItemView = Backbone.View.extend({
