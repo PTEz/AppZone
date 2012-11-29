@@ -142,10 +142,10 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
     }
   }
 
-  def publishPlatform(appId: String, releaseId: String, resList: App => ReleaseMap) = {
+  def publishPlatform(appId: String, releaseId: String, resList: App => ReleaseList) = {
     def updateApp(app: App) = {
       val releaseList = resList(app)
-      val record: AppPlatformEntry = releaseList.getApp(releaseId).openOr(AppPlatformEntry.createRecord)
+      val record: AppPlatformEntry = releaseList.getRelease(releaseId).openOr(AppPlatformEntry.createRecord)
       record.version.set(params.getOrElse("version", "NOT SET"))
       record.incrementVersionCode
       record.setDateToNow
@@ -153,7 +153,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
         case Some(changelog) => record.addChangeLog(changelog)
         case _ =>
       }
-      releaseList.addApp(releaseId, record)
+      releaseList.addRelease(releaseId, record)
       App.update(("id" -> appId), app)
       Json(app.asJValue)
     }

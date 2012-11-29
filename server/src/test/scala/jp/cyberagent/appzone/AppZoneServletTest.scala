@@ -71,9 +71,9 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     get("/apps") {
       val apps = JsonParser.parse(body).asInstanceOf[JArray]
       apps.values.length should equal(2)
-      val android = apps(1).asInstanceOf[JObject].values(platform).asInstanceOf[Map[String, AppPlatformEntry]]
-      android.contains(releaseId) should equal(true)
-      val release = android(releaseId).asInstanceOf[Map[String, Object]]
+      val android = apps(1).asInstanceOf[JObject].values(platform).asInstanceOf[List[AppPlatformEntry]]
+      val release = android(0).asInstanceOf[Map[String, Object]]
+      release("id") should equal(releaseId)
       release("versionCode") should equal(1)
     }
   }
@@ -90,9 +90,9 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     get("/app/testid") {
       val releaseId = DEFAULT_RELEASE_ID
       val testApp = JsonParser.parse(body).asInstanceOf[JObject]
-      val android = testApp.values("android").asInstanceOf[Map[String, AppPlatformEntry]]
-      android.contains(releaseId) should equal(true)
-      val release = android(releaseId).asInstanceOf[Map[String, Object]]
+      val android = testApp.values("android").asInstanceOf[List[AppPlatformEntry]]
+      val release = android(0).asInstanceOf[Map[String, Object]]
+      release("id") should equal(releaseId)
       release("changelog") should equal("[1.0]\nSome change (username)")
     }
   }
@@ -106,9 +106,9 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     get("/app/testid") {
       val releaseId = DEFAULT_RELEASE_ID
       val testApp = JsonParser.parse(body).asInstanceOf[JObject]
-      val android = testApp.values("android").asInstanceOf[Map[String, AppPlatformEntry]]
-      android.contains(releaseId) should equal(true)
-      val release = android(releaseId).asInstanceOf[Map[String, Object]]
+      val android = testApp.values("android").asInstanceOf[List[AppPlatformEntry]]
+      val release = android(0).asInstanceOf[Map[String, Object]]
+      release("id") should equal(releaseId)
       release("changelog") should equal("[1.1]\nSome other change (username)\n[1.0]\nSome change (username)")
     }
   }
@@ -142,7 +142,7 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     }
     get("/app/" + app.id.get) {
       val jsonApp = JsonParser.parse(body).asInstanceOf[JObject]
-      val android = jsonApp.values(platform).asInstanceOf[Map[String, AppPlatformEntry]]
+      val android = jsonApp.values(platform).asInstanceOf[List[AppPlatformEntry]]
       android.contains(releaseId) should equal(false)
     }
   }

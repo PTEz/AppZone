@@ -24,6 +24,7 @@ import jp.cyberagent.appzone.field.BsonRecordMapField
 import net.liftweb.mongodb.record.field.MongoMapField
 import net.liftweb.common.Box
 import scala.collection.immutable.Map
+import net.liftweb.mongodb.record.field.BsonRecordListField
 
 case class App private () extends MongoRecord[App] {
   def meta = App
@@ -32,8 +33,8 @@ case class App private () extends MongoRecord[App] {
   object name extends StringField(this, 20)
   object description extends StringField(this, 255) { override def optional_? = true }
 
-  object android extends ReleaseMap(this)
-  object ios extends ReleaseMap(this)
+  object android extends ReleaseList(this)
+  object ios extends ReleaseList(this)
 }
 
 object App extends App with MongoMetaRecord[App]
@@ -50,9 +51,27 @@ class ReleaseMap(rec: App) extends BsonRecordMapField[App, AppPlatformEntry](rec
   def keyifyId(id: String) = id.replace(".", "_");
 }
 /////////////////////
+class ReleaseList(rec: App) extends BsonRecordListField[App, AppPlatformEntry](rec, AppPlatformEntry) {
+  override def defaultValue = List[AppPlatformEntry]()
+  def addRelease(releaseId: String, record: AppPlatformEntry) {
+    record.id.set(releaseId)
+    val index = this.value.indexWhere(release => release.id.value == releaseId)
+    this.set(
+      index match {
+        case -1 => record :: this.value
+        case _ => this.value.updated(index, record)
+      })
+  }
+  def getRelease(releaseId: String): Box[AppPlatformEntry] = {
+    this.value.find((release) => release.id.value == releaseId)
+  }
+  def keyifyId(id: String) = id.replace(".", "_");
+}
+/////////////////////
 class AppPlatformEntry private () extends BsonRecord[AppPlatformEntry] {
   def meta = AppPlatformEntry
 
+  object id extends StringField(this, 150)
   object version extends StringField(this, 255)
   object versionCode extends IntField(this, 0)
   object lastUpdateDate extends StringField(this, 24)
@@ -66,9 +85,9 @@ class AppPlatformEntry private () extends BsonRecord[AppPlatformEntry] {
   def addChangeLog(change: String) {
     var newChangeLog = "[" + version.get + "]\n" + change
     if (changelog.get.length() > 0)
-      newChangeLog = newChangeLog + "\n" +changelog.get
-      if (newChangeLog.length() > 2000) 
-        newChangeLog = newChangeLog.substring(0, 1999)
+      newChangeLog = newChangeLog + "\n" + changelog.get
+    if (newChangeLog.length() > 2000)
+      newChangeLog = newChangeLog.substring(0, 1999)
     changelog.set(newChangeLog)
   }
 }
