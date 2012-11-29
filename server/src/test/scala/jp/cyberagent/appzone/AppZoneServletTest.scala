@@ -83,6 +83,35 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     }
     checkAppsContainsRelease("android", DEFAULT_RELEASE_ID)
   }
+  test("POST /app/:id/android should add changelog if sent") {
+    post("/app/testid/android", Map("version" -> "1.0", "changelog" -> "Some change (username)"), Map("apk" -> ANDROID_APK_FILE)) {
+      status should equal(200)
+    }
+    get("/app/testid") {
+      val releaseId = DEFAULT_RELEASE_ID
+      val testApp = JsonParser.parse(body).asInstanceOf[JObject]
+      val android = testApp.values("android").asInstanceOf[Map[String, AppPlatformEntry]]
+      android.contains(releaseId) should equal(true)
+      val release = android(releaseId).asInstanceOf[Map[String, Object]]
+      release("changelog") should equal("[1]\nSome change (username)")
+    }
+  }
+  test("POST /app/:id/android should add changelog to top") {
+    post("/app/testid/android", Map("version" -> "1.0", "changelog" -> "Some change (username)"), Map("apk" -> ANDROID_APK_FILE)) {
+      status should equal(200)
+    }
+    post("/app/testid/android", Map("version" -> "1.1", "changelog" -> "Some other change (username)"), Map("apk" -> ANDROID_APK_FILE)) {
+      status should equal(200)
+    }
+    get("/app/testid") {
+      val releaseId = DEFAULT_RELEASE_ID
+      val testApp = JsonParser.parse(body).asInstanceOf[JObject]
+      val android = testApp.values("android").asInstanceOf[Map[String, AppPlatformEntry]]
+      android.contains(releaseId) should equal(true)
+      val release = android(releaseId).asInstanceOf[Map[String, Object]]
+      release("changelog") should equal("[2]\nSome other change (username)\n[1]\nSome change (username)")
+    }
+  }
   test("POST /app/:id/android/:releaseId should add the release with given releaseId") {
     val releaseId = "production"
     post("/app/" + app.id.get + "/android/" + releaseId, Map("version" -> "1.0"), Map("apk" -> ANDROID_APK_FILE)) {
@@ -108,7 +137,7 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
     }
   }
   def testDelete(platform: String, releaseId: String) {
-    delete("/app/" + app.id.get + "/"+platform+"/" + releaseId) {
+    delete("/app/" + app.id.get + "/" + platform + "/" + releaseId) {
       status should equal(200)
     }
     get("/app/" + app.id.get) {

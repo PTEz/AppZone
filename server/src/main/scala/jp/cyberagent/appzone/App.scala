@@ -56,12 +56,21 @@ class AppPlatformEntry private () extends BsonRecord[AppPlatformEntry] {
   object version extends StringField(this, 255)
   object versionCode extends IntField(this, 0)
   object lastUpdateDate extends StringField(this, 24)
+  object changelog extends StringField(this, 2000)
 
   object releaseName extends StringField(this, 50) { override def optional_? = true }
   object releaseNotes extends StringField(this, 1024) { override def optional_? = true }
 
   def setDateToNow() = lastUpdateDate.set(AppPlatformEntry.DATE_FORMAT.format(new Date))
   def incrementVersionCode() = versionCode.set(versionCode.get + 1)
+  def addChangeLog(change: String) {
+    var newChangeLog = "[" + versionCode.get + "]\n" + change
+    if (changelog.get.length() > 0)
+      newChangeLog = newChangeLog + "\n" +changelog.get
+      if (newChangeLog.length() > 2000) 
+        newChangeLog = newChangeLog.substring(0, 1999)
+    changelog.set(newChangeLog)
+  }
 }
 object AppPlatformEntry extends AppPlatformEntry with BsonMetaRecord[AppPlatformEntry] {
   val DATE_FORMAT = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")

@@ -149,6 +149,10 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       record.version.set(params.getOrElse("version", "NOT SET"))
       record.incrementVersionCode
       record.setDateToNow
+      params.get("changelog") match {
+        case Some(changelog) => record.addChangeLog(changelog)
+        case _ =>
+      }
       releaseList.addApp(releaseId, record)
       App.update(("id" -> appId), app)
       Json(app.asJValue)
@@ -238,7 +242,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   // For CORS
-  options("*") {handlePreflightRequest()}
+  options("*") { handlePreflightRequest() }
 
   notFound {
     // remove content type in case it was set through an action
