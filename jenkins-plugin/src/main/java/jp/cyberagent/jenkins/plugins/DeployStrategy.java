@@ -8,10 +8,14 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 
 abstract class DeployStrategy {
     public static final String TAG = "[AppZone] ";
@@ -24,6 +28,7 @@ abstract class DeployStrategy {
     private final BuildListener mListener;
 
     private String mUrl;
+    private String mChangeLog;
 
     public DeployStrategy(final String server, final String type, final String id,
             final String tag, final boolean prependNameToTag, final AbstractBuild build,
@@ -35,6 +40,10 @@ abstract class DeployStrategy {
         mListener = listener;
         mPrependNameToTag = prependNameToTag;
         mBuild = build;
+    }
+
+    public void setChangeLog(final String changeLog) {
+        mChangeLog = changeLog;
     }
 
     public String getUrl() {
@@ -97,7 +106,14 @@ abstract class DeployStrategy {
         return url.toString();
     }
 
-    public abstract Part[] getParts();
+    public List<Part> getParts() throws FileNotFoundException {
+        List<Part> list = new LinkedList<Part>();
+        list.add(new StringPart("version", getVersion()));
+        if (mChangeLog != null && mChangeLog.length() > 0) {
+            list.add(new StringPart("changelog", mChangeLog));
+        }
+        return list;
+    }
 
     public abstract String getDeployableName();
 }

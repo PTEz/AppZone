@@ -7,12 +7,12 @@ import hudson.model.AbstractBuild;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
 
 import brut.androlib.AndrolibException;
 import brut.androlib.res.AndrolibResources;
@@ -25,22 +25,19 @@ import brut.androlib.res.util.ExtFile;
 class DeployStrategyAndroid extends DeployStrategy {
 
     private final File mApkFile;
-    private final Part[] mParts;
 
     public DeployStrategyAndroid(final String server, final String id, final String tag,
             final boolean prependNameToTag, final File apkFile, final AbstractBuild build,
-            final BuildListener listener) throws FileNotFoundException {
+            final BuildListener listener) {
         super(server, "android", id, tag, prependNameToTag, build, listener);
         mApkFile = apkFile;
-        mParts = new Part[] {
-                new StringPart("version", getVersion()),
-                new FilePart("apk", apkFile),
-        };
     }
 
     @Override
-    public Part[] getParts() {
-        return mParts;
+    public List<Part> getParts() throws FileNotFoundException {
+        List<Part> parts = super.getParts();
+        parts.add(new FilePart("apk", mApkFile));
+        return parts;
     }
 
     @Override

@@ -6,6 +6,7 @@ import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.scm.ChangeLogSet;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -26,6 +27,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -77,6 +79,11 @@ public class AndroidAppZonePublisher extends Notifier {
     @Override
     public boolean perform(final AbstractBuild build, final Launcher launcher,
             final BuildListener listener) {
+        StringBuilder changeLog = new StringBuilder();
+        for (Object changeObject : build.getChangeSet().getItems()) {
+            ChangeLogSet.Entry change = (ChangeLogSet.Entry) changeObject;
+            changeLog.append(change.getMsg() + " (" + change.getAuthor().getDisplayName() + ")");
+        }
         String server = getDescriptor().getServer();
         if (server == null || server.length() == 0) {
             listener.getLogger().println(TAG +
@@ -106,13 +113,16 @@ public class AndroidAppZonePublisher extends Notifier {
                 } else {
                     return false;
                 }
+                deploy.setChangeLog(changeLog.toString());
                 listener.getLogger().println(TAG + "Version: " + deploy.getVersion());
                 listener.getLogger().println(TAG + "Publishing to: " + deploy.getUrl());
 
                 HttpClient httpclient = new HttpClient();
                 PostMethod filePost = new PostMethod(deploy.getUrl());
+                List<Part> parts = deploy.getParts();
                 filePost.setRequestEntity(
-                        new MultipartRequestEntity(deploy.getParts(), filePost.getParams()));
+                        new MultipartRequestEntity(parts.toArray(new Part[parts.size()]),
+                                filePost.getParams()));
                 httpclient.executeMethod(filePost);
                 int statusCode = filePost.getStatusCode();
                 if (statusCode < 200 || statusCode > 299) {

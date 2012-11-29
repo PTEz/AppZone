@@ -9,12 +9,12 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.AbstractFileFilter;
@@ -29,7 +29,6 @@ class DeployStrategyIOs extends DeployStrategy {
 
     private final File mIpaFile;
     private final File mPlistFile;
-    private Part[] mParts;
 
     public DeployStrategyIOs(final String server, final String id, final String tag,
             final boolean prependNameToTag, final File ipaFile, final AbstractBuild build,
@@ -70,19 +69,11 @@ class DeployStrategyIOs extends DeployStrategy {
     }
 
     @Override
-    public Part[] getParts() {
-        if (mParts == null) {
-            try {
-                mParts = new Part[] {
-                        new StringPart("version", getVersion()),
-                        new FilePart("ipa", mIpaFile),
-                        new FilePart("manifest", getManifestFile()),
-                };
-            } catch (FileNotFoundException e) {
-                getLogger().println(TAG + "Error: " + e.getMessage());
-            }
-        }
-        return mParts;
+    public List<Part> getParts() throws FileNotFoundException {
+        List<Part> parts = super.getParts();
+        parts.add(new FilePart("ipa", mIpaFile));
+        parts.add(new FilePart("manifest", getManifestFile()));
+        return parts;
     }
 
     @Override
