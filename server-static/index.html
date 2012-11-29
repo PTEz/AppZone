@@ -28,14 +28,23 @@
   </script>
 
   <script type="text/template" id="release-template">
-    <a class="release download" href="#">
-      <% if (id !== "_default") { %>
-        <label class="id"><%- id %></label>
-      <% } %>
-      <span class="version"><%- version %></span>
-      <span class="lastUpdateDate"><%- moment(lastUpdateDate).fromNow() %></span>
-      <div class="delete">del</div>
-    </a>
+    <div class="release">
+      <a class="download" href="#">
+        <% if (id !== "_default") { %>
+          <label class="id"><%- id %></label>
+        <% } %>
+        <span class="version"><%- version %></span>
+        <span class="lastUpdateDate"><%- moment(lastUpdateDate).fromNow() %></span>
+        <div class="toggle">&#9660;</div>
+      </a>
+      <div class="detail">
+        <div class="changelog">
+          <a class="changelog-preview"><%= changelogpreview %></a>
+          <div class="changelog-full"><%= changelog.replace(/\n/g, '<br />') %></div>
+        </div>
+        <a class="delete" href="#">Delete</a>
+      </div>
+    </div>
   </script>
 
   <script type="text/template" id="feedback-template">

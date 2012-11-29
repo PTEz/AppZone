@@ -16,6 +16,8 @@ var AppItem = Backbone.Model.extend({
         item.appId = data.id;
         item.id = keys[i];
         item.platform = name;
+        var changelog = item.changelog ? item.changelog.split('\n', 2) : [];
+        item.changelogpreview = (changelog.length > 1 ? changelog[1] + ' ...' : '');
         items.push(item);
       }
       return _.sortBy(items, function(item) { return item.id; } );
@@ -76,12 +78,25 @@ var ReleaseItemView = Backbone.View.extend({
   tagName: 'li',
   template: _.template($('#release-template').html()),
   events: {
+    'click .toggle': 'toggleDetail',
+    'click .changelog-preview': 'toggleChangeLog',
+    'click .changelog-full': 'toggleChangeLog',
     'click .delete': 'deleteRelease'
   },
   render: function() {
     this.$el.html(this.template(this.model));
     this.$('a.download').attr('href', SERVER + 'app/' + this.model.appId + '/' +this.model.platform + '/' + this.model.id);
+    this.$('.detail').hide();
+    this.$('.changelog-full').hide();
     return this;
+  },
+  toggleDetail: function() {
+    this.$('.detail').toggle();
+    return false;
+  },
+  toggleChangeLog: function() {
+    this.$('.changelog-preview').toggle();
+    this.$('.changelog-full').toggle();
   },
   deleteRelease: function() {
     if(prompt('Type "DELETE" to really delete') === 'DELETE') {
