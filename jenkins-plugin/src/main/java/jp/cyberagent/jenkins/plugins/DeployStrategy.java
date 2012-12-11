@@ -110,7 +110,7 @@ abstract class DeployStrategy {
         List<Part> list = new LinkedList<Part>();
         list.add(new StringPart("version", getVersion()));
         if (mChangeLog != null && mChangeLog.length() > 0) {
-            list.add(new StringPart("changelog", mChangeLog));
+            list.add(new StringPart("changelog", mChangeLog, "UTF-8"));
         }
         return list;
     }
