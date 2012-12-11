@@ -157,7 +157,6 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   def publishPlatform(appId: String, releaseId: String, resList: App => ReleaseList) = {
-    request.setCharacterEncoding("UTF-8")
     def updateApp(app: App) = {
       val releaseList = resList(app)
       val record: AppPlatformEntry = releaseList.getRelease(releaseId).openOr(AppPlatformEntry.createRecord)
@@ -165,7 +164,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
       record.incrementVersionCode
       record.setDateToNow
       params.get("changelog") match {
-        case Some(changelog) => record.addChangeLog(changelog)
+        case Some(changelog) => record.addChangeLog(new String(changelog.getBytes("iso-8859-1"), "UTF-8"))
         case _ =>
       }
       releaseList.addRelease(releaseId, record)
