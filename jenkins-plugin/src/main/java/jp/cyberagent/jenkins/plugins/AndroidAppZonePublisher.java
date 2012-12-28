@@ -3,27 +3,16 @@ package jp.cyberagent.jenkins.plugins;
 
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.scm.ChangeLogSet;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.servlet.ServletException;
-
 import net.sf.json.JSONObject;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -35,6 +24,14 @@ import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+
+import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 public class AndroidAppZonePublisher extends Notifier {
     public static final String DEFAULT_APPSERVER = "http://appzone-api.pes.ch/";
@@ -96,7 +93,7 @@ public class AndroidAppZonePublisher extends Notifier {
 
         Collection<File> files = getPossibleAppFiles(build, listener);
         if (files.isEmpty()) {
-            listener.getLogger().println(TAG + "No file to puslish found. Skip.");
+            listener.getLogger().println(TAG + "No file to publish found. Skip.");
             return true;
         }
         Iterator<File> fileIterator = files.iterator();
@@ -177,7 +174,6 @@ public class AndroidAppZonePublisher extends Notifier {
         return (DescriptorImpl) super.getDescriptor();
     }
 
-    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
