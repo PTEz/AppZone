@@ -30,6 +30,10 @@ import net.liftweb.common.Full
 import scala.collection.mutable.HashMap
 import com.mongodb.DBObject
 import net.liftweb.json.JObject
+import com.dd.plist.PropertyListParser
+import com.dd.plist.NSDictionary
+import java.util.zip.ZipFile
+import java.util.zip.ZipEntry
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport with CorsSupport {
   val DEFAULT_RELEASE = "_default"
@@ -144,13 +148,13 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   def publishIOs(appId: String, releaseId: String) = {
     fileParams.get("ipa") match {
       case Some(ipaFile) =>
-        fileParams.get("manifest") match {
-          case Some(manifestFile) =>
-            storeFile(ipaFile, appId + "/ios-" + releaseId + ".ipa")
-            storeFile(manifestFile, appId + "/ios-" + releaseId + ".manifest")
-            publishPlatform(appId, releaseId, app => app.ios)
-          case _ => BadRequest("manifest (file) parameter required")
-        }
+        val manifest = new IOSManifestBuilder(ipaFile).createManifest(request.getRequestURL().toString + "/ipa")
+        /// new code
+        // TODO store created manifest instead of fileParam
+        ///
+        storeFile(ipaFile, appId + "/ios-" + releaseId + ".ipa")
+        storeFile(manifest, "application/x-plist", appId + "/ios-" + releaseId + ".manifest")
+        publishPlatform(appId, releaseId, app => app.ios)
       case None =>
         BadRequest("ipa (file) parameter required")
     }
@@ -269,13 +273,15 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   def storeFile(file: FileItem, fileName: String) {
-    val input = file.getInputStream
+    storeFile(file.getInputStream, file.contentType.getOrElse("application/octet-stream"), fileName)
+  }
+  def storeFile(manifest: InputStream, contentType: String, fileName: String) {
     MongoDB.use(DefaultMongoIdentifier) { db =>
       val fs = new GridFS(db)
       fs.remove(fileName)
-      val inputFile = fs.createFile(input)
+      val inputFile = fs.createFile(manifest)
       inputFile.setFilename(fileName)
-      inputFile.setContentType(file.contentType.getOrElse("application/octet-stream"))
+      inputFile.setContentType(contentType)
       inputFile.save
     }
   }
