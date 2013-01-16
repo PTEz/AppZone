@@ -24,7 +24,6 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
   val DEFAULT_RELEASE_ID = "_default"
   val ANDROID_APK_FILE = new File(getClass.getResource("/android.apk").toURI())
   val IOS_IPA_FILE = new File(getClass.getResource("/ios.ipa").toURI())
-  val IOS_MANIFEST_FILE = new File(getClass.getResource("/ios.manifest").toURI())
 
   val app = App.createRecord
   app.id.set("testid")
@@ -121,10 +120,16 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
   }
   test("POST /app/:id/ios/:releaseId should add the release with given releaseId") {
     val releaseId = "production"
-    post("/app/" + app.id.get + "/ios/" + releaseId, Map("version" -> "1.0"), Map("ipa" -> IOS_IPA_FILE, "manifest" -> IOS_MANIFEST_FILE)) {
+    post("/app/" + app.id.get + "/ios/" + releaseId, Map("version" -> "1.0"), Map("ipa" -> IOS_IPA_FILE)) {
       status should equal(200)
     }
     checkAppsContainsRelease("ios", releaseId)
+    get("/app/" + app.id.get + "/ios/" + releaseId + "/manifest") {
+      status should equal(200)
+      body should include("<string>Farmy</string>")
+      body should include("<string>0.1.0 (80)</string>")
+      body should include("<string>jp.co.cyberagent.nbu.farmy-ota</string>")
+    }
   }
   test("DELETE /app/:id should delete the app") {
     delete("/app/" + app2.id.get) {
@@ -155,7 +160,7 @@ class AppZoneServletTest extends ScalatraSuite with FunSuite with BeforeAndAfter
   }
   test("DELETE /app/:id/ios/:releaseId should delete the release") {
     val releaseId = "development"
-    post("/app/" + app.id.get + "/ios/" + releaseId, Map("version" -> "1.0"), Map("ipa" -> IOS_IPA_FILE, "manifest" -> IOS_MANIFEST_FILE)) {
+    post("/app/" + app.id.get + "/ios/" + releaseId, Map("version" -> "1.0"), Map("ipa" -> IOS_IPA_FILE)) {
       status should equal(200)
     }
     testDelete("ios", releaseId)
