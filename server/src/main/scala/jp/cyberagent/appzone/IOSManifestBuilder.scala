@@ -20,7 +20,7 @@ class IOSManifestBuilder(ipaFile: FileItem) {
     var entry: ZipEntry = null
     while (entries.hasMoreElements() && entry == null) {
       val element = entries.nextElement()
-      if (element.getName().toLowerCase().endsWith("info.plist")) {
+      if (element.getName().toLowerCase().endsWith("/info.plist")) {
         entry = element
       }
     }
@@ -33,7 +33,7 @@ class IOSManifestBuilder(ipaFile: FileItem) {
       .replace("${CFBundleIdentifier}", rootDict.objectForKey("CFBundleIdentifier").toString())
       .replace("${CFBundleShortVersionString}", rootDict.objectForKey("CFBundleShortVersionString").toString() + " (" + rootDict.objectForKey("CFBundleVersion").toString() + ")")
 
-     new ByteArrayInputStream(manifest.getBytes())
+    new ByteArrayInputStream(manifest.getBytes())
   }
 }
 
