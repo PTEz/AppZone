@@ -1,3 +1,5 @@
+import AssemblyKeys._
+
 organization := "jp.cyberagent"
 
 name := "NBU AppZone"
@@ -10,6 +12,10 @@ seq(webSettings :_*)
 
 classpathTypes ~= (_ + "orbit")
 
+mainClass := Some("jp.cyberagent.appzone.JettyLauncher")
+
+assemblySettings
+
 libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-mongodb-record" % "2.5-M1",
   "net.liftweb" %% "lift-json" % "2.5-M1",
@@ -21,6 +27,13 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.0.6" % "runtime",
   "com.googlecode.plist" % "dd-plist" % "1.0",
   "org.apache.commons" % "commons-io" % "1.3.2",
-  "org.eclipse.jetty" % "jetty-webapp" % "8.1.7.v20120910" % "container",
-  "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar"))
+  "org.eclipse.jetty" % "jetty-webapp" % "8.1.7.v20120910" % "compile;container",
+  "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "compile;container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar"))
 )
+
+mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
+  {
+    case "about.html" => MergeStrategy.rename
+    case x => old(x)
+  }
+}
