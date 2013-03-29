@@ -5,3 +5,6 @@ target/
 .cache
 .classpath
 .project
+
+# generated props file
+src/main/resources/props

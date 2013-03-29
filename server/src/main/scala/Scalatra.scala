@@ -24,6 +24,7 @@ class Scalatra extends LifeCycle {
     val srvr = new ServerAddress(
       Props.get("mongo.host", "127.0.0.1"),
       Props.getInt("mongo.port", 27017))
-    MongoDB.defineDb(DefaultMongoIdentifier, new Mongo(srvr), "appzone")
+    val db = Props.get("mongo.db", "appzone")
+    MongoDB.defineDb(DefaultMongoIdentifier, new Mongo(srvr), db)
   }
 }
