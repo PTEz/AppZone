@@ -1,5 +1,5 @@
 
-package jp.cyberagent.jenkins.plugins;
+package jp.co.cyberagent.jenkins.plugins;
 
 public class AndroidUtils {
     // decompressXML -- Parse the 'compressed' binary form of Android XML docs

@@ -1,5 +1,5 @@
 
-package jp.cyberagent.jenkins.plugins;
+package jp.co.cyberagent.jenkins.plugins;
 
 import hudson.Extension;
 import hudson.Launcher;

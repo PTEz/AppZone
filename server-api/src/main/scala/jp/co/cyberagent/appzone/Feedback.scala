@@ -1,4 +1,4 @@
-package jp.cyberagent.appzone
+package jp.co.cyberagent.appzone
 
 import net.liftweb.mongodb.record.MongoRecord
 import net.liftweb.record.field.StringField
@@ -13,7 +13,7 @@ case class Feedback private() extends MongoRecord[Feedback] with ObjectIdPk[Feed
   object appType extends StringField(this, 10)
   object feedback extends StringField(this, "")
   object date extends StringField(this, "")
-  
+
   def setDateToNow() = date.set(Feedback.DATE_FORMAT.format(new Date))
 }
 

@@ -6,11 +6,11 @@
     <version>1.466</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
-  <groupId>jp.cyberagent.jenkins.plugins</groupId>
+  <groupId>jp.co.cyberagent.jenkins.plugins</groupId>
   <artifactId>appzone</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  
+
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>

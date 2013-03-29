@@ -1,4 +1,4 @@
-package jp.cyberagent.appzone
+package jp.co.cyberagent.appzone
 
 trait JsonHelpers {
   import net.liftweb.json._

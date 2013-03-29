@@ -1,4 +1,4 @@
-package jp.cyberagent.appzone
+package jp.co.cyberagent.appzone
 
 import org.scalatra._
 import org.scalatra.servlet.FileUploadSupport

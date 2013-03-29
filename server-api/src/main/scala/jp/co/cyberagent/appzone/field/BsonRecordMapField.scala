@@ -1,4 +1,4 @@
-package jp.cyberagent.appzone.field
+package jp.co.cyberagent.appzone.field
 
 import net.liftweb.mongodb.record.BsonRecord
 import net.liftweb.mongodb.record.field.MongoMapField

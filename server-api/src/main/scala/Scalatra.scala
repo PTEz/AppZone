@@ -1,4 +1,4 @@
-import jp.cyberagent.appzone._
+import jp.co.cyberagent.appzone._
 import org.scalatra._
 import javax.servlet.ServletContext
 import com.mongodb.Mongo

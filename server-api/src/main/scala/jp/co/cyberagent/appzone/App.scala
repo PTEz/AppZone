@@ -1,4 +1,4 @@
-package jp.cyberagent.appzone
+package jp.co.cyberagent.appzone
 
 import net.liftweb.mongodb.record.MongoRecord
 import net.liftweb.record.field.StringField
@@ -20,7 +20,7 @@ import net.liftweb.json.JString
 import net.liftweb.json.MappingException
 import net.liftweb.mongodb.Meta
 import net.liftweb.json.DateFormat
-import jp.cyberagent.appzone.field.BsonRecordMapField
+import jp.co.cyberagent.appzone.field.BsonRecordMapField
 import net.liftweb.mongodb.record.field.MongoMapField
 import net.liftweb.common.Box
 import scala.collection.immutable.Map

@@ -43,7 +43,7 @@ Edit the SERVER variable at the top of server-web/js/appzone.js to point to your
 Now open the site's [root page](http://localhost:8080/) in your browser.
 
 ## Jenkins plugin
-Running the following command creates a .hpi file, that can be installed in jenkins in the plugin manager (advanced tab).
+Running the following command creates a .hpi file in the target directory, that can be installed in jenkins in the plugin manager (advanced tab).
 
     cd jenkins-plugin
     mvn package

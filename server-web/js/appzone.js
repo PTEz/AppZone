@@ -1,7 +1,6 @@
 /*global Backbone,_ */
 (function() {
-var SERVER = 'http://appzone-api.pes.ch/';
-// var SERVER = 'http://localhost:8080/';
+var SERVER = 'http://localhost:8081/';
 var AppItem = Backbone.Model.extend({
   url: function() { return SERVER + 'app/' + this.id; },
   clear: function() {

@@ -1,4 +1,4 @@
-package jp.cyberagent.appzone
+package jp.co.cyberagent.appzone
 
 import org.scalatra.test.scalatest.ScalatraSuite
 import org.scalatest.FunSuite

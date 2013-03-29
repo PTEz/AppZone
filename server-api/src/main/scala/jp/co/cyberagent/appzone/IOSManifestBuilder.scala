@@ -1,4 +1,4 @@
-package jp.cyberagent.appzone
+package jp.co.cyberagent.appzone
 
 import org.scalatra.servlet.FileItem
 import java.io.InputStream

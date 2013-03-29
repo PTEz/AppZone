@@ -1,6 +1,6 @@
 import AssemblyKeys._
 
-organization := "jp.cyberagent"
+organization := "jp.co.cyberagent"
 
 name := "NBU AppZone"
 
@@ -12,7 +12,7 @@ seq(webSettings :_*)
 
 classpathTypes ~= (_ + "orbit")
 
-mainClass := Some("jp.cyberagent.appzone.JettyLauncher")
+mainClass := Some("jp.co.cyberagent.appzone.JettyLauncher")
 
 assemblySettings
 
