@@ -15,13 +15,17 @@ a.app {
 
 div.app {
 	border: 1px solid #777;
-	border-radius: 5px;
 	position: relative;
 }
 .app .name {
-	margin: 3px;
+	padding: 3px;
 	font-size: 18px;
 	font-weight: bold;
+	background: #aaa;
+}
+
+.app .name:hover {
+	background: #ccc;
 }
 .app .delete.all {
 	position: absolute;
