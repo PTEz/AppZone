@@ -21,7 +21,7 @@ case "$1" in
 start)
     echo "Starting..."
 
-    cd server
+    cd server-api
 
     PROPS_FOLDER=src/main/resources/props
     PROPS_FILE=$PROPS_FOLDER/default.props
@@ -37,7 +37,7 @@ start)
     export PORT=$api_port
     java -jar target/scala-2.9.2/*-assembly-*.jar &
 
-    cd ../server-static/
+    cd ../server-web/
     perl -p -i -e "s/http:\/\/[^\/]+\//http:\/\/$api_ext_domain:$api_ext_port\//g" js/appzone.js
     python -m SimpleHTTPServer $web_port &
 
