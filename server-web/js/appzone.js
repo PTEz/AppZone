@@ -1,6 +1,6 @@
 /*global Backbone,_ */
 (function() {
-var SERVER = 'http://appzone-api.idcf.nbu.ca.local/';
+var SERVER = 'http://appzone-api.idcf.prd.nbu.ca.local/';
 var AppItem = Backbone.Model.extend({
   url: function() { return SERVER + 'app/' + this.id; },
   clear: function() {
