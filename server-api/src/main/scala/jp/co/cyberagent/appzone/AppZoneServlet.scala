@@ -37,6 +37,7 @@ import java.util.zip.ZipEntry
 import net.liftweb.json.JObject
 import net.liftweb.util.Props
 import org.slf4j.LoggerFactory
+import org.apache.commons.lang3.StringUtils
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with AuthenticationSupport
 with JsonHelpers with FileUploadSupport with CorsSupport {
@@ -44,7 +45,13 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
 
   before() {
     contentType = "application/json"
-    val isInWhiteList = Props.get("auth.whitelist", "").split(",").contains(request.getRemoteAddr())
+    val remoteAddrHeader = request.getHeader("X-Real-IP")
+    val remoteAddr = if (request.getRemoteAddr() == "127.0.0.1" && !StringUtils.isEmpty(remoteAddrHeader)) {
+      remoteAddrHeader
+    } else {
+      request.getRemoteAddr()
+    }
+    val isInWhiteList = Props.get("auth.whitelist", "").split(",").contains(remoteAddr)
     if (request.getMethod().toUpperCase() != "OPTIONS" && Props.getBool("auth.enable", false) && !isInWhiteList) {
       if (!session.contains("user_id") && !request.getPathInfo().equals("/auth")) {
         halt(401)
