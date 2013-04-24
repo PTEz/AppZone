@@ -35,6 +35,7 @@ import com.dd.plist.NSDictionary
 import java.util.zip.ZipFile
 import java.util.zip.ZipEntry
 import net.liftweb.json.JObject
+import net.liftweb.util.Props
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with AuthenticationSupport
 with JsonHelpers with FileUploadSupport with CorsSupport {
@@ -42,8 +43,8 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
 
   before() {
     contentType = "application/json"
-
-    if (request.getMethod().toUpperCase() != "OPTIONS" && Props.getBool("auth.enable", false)) {
+    val isInWhiteList = Props.get("auth.whitelist", "").split(",").contains(request.getRemoteAddr())
+    if (request.getMethod().toUpperCase() != "OPTIONS" && Props.getBool("auth.enable", false) && !isInWhiteList) {
       val user = {
         if (session.contains("user_id")) {
           Some(User(session.getAttribute("user_id").toString()))

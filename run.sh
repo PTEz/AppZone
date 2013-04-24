@@ -34,6 +34,7 @@ start)
     echo "auth.source=$auth_source" >> $PROPS_FILE
     echo "auth.ldap.url=$auth_ldap_url" >> $PROPS_FILE
     echo "auth.ldap.principal=$auth_ldap_principal" >> $PROPS_FILE
+    echo "auth.whitelist=$auth_whitelist" >> $PROPS_FILE
 
     if [ "$2" != "skipbuild" ]
     then
