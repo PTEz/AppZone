@@ -30,7 +30,6 @@ var AppItem = Backbone.Model.extend({
 
     data.ios = doParse('ios');
     data.android = doParse('android');
-    console.log(data);
     return data;
   }
 });
