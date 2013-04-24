@@ -3,16 +3,34 @@ package jp.co.cyberagent.jenkins.plugins;
 
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
 import hudson.scm.ChangeLogSet;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+
+import java.io.File;
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.servlet.ServletException;
+
 import net.sf.json.JSONObject;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -25,16 +43,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.servlet.ServletException;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 public class AndroidAppZonePublisher extends Notifier {
-    public static final String DEFAULT_APPSERVER = "http://appzone-api.idcf.nbu.ca.local/";
+    public static final String DEFAULT_APPSERVER = "https://appzone.idcf.prd.nbu.ca.local/api/";
 
     private static final String TAG = "[AppZone] ";
 
@@ -117,6 +127,7 @@ public class AndroidAppZonePublisher extends Notifier {
                 listener.getLogger().println(TAG + "Version: " + deploy.getVersion());
                 listener.getLogger().println(TAG + "Publishing to: " + deploy.getUrl());
 
+                setUpSsl();
                 HttpClient httpclient = new HttpClient();
                 PostMethod filePost = new PostMethod(deploy.getUrl());
                 List<Part> parts = deploy.getParts();
@@ -136,6 +147,19 @@ public class AndroidAppZonePublisher extends Notifier {
             }
         }
         return true;
+    }
+
+    private void setUpSsl() {
+        // TODO maybe have setting or given certificate to check with.
+        try {
+            SSLContext ctx = SSLContext.getInstance("TLS");
+            ctx.init(new KeyManager[0], new TrustManager[] {
+                    new DefaultTrustManager()
+            }, new SecureRandom());
+            SSLContext.setDefault(ctx);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private Collection<File> getPossibleAppFiles(final AbstractBuild build,
@@ -174,6 +198,7 @@ public class AndroidAppZonePublisher extends Notifier {
         return (DescriptorImpl) super.getDescriptor();
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
@@ -231,6 +256,24 @@ public class AndroidAppZonePublisher extends Notifier {
 
         public void setServer(final String server) {
             this.server = server;
+        }
+    }
+
+    private static class DefaultTrustManager implements X509TrustManager {
+
+        @Override
+        public void checkClientTrusted(final X509Certificate[] arg0, final String arg1)
+                throws CertificateException {
+        }
+
+        @Override
+        public void checkServerTrusted(final X509Certificate[] arg0, final String arg1)
+                throws CertificateException {
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
         }
     }
 }
