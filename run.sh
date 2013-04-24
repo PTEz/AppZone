@@ -25,7 +25,7 @@ start)
 
     PROPS_FOLDER=src/main/resources/props
     PROPS_FILE=$PROPS_FOLDER/default.props
-    mkdir $PROPS_FOLDER
+    mkdir -p $PROPS_FOLDER
     echo "mongo.host=$mongo_host" > $PROPS_FILE
     echo "mongo.port=$mongo_port" >> $PROPS_FILE
     echo "mongo.db=$mongo_db" >> $PROPS_FILE
