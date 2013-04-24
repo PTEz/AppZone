@@ -45,10 +45,10 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   before() {
     contentType = "application/json"
     val isInWhiteList = Props.get("auth.whitelist", "").split(",").contains(request.getRemoteAddr())
-    logger.info("WhiteList: "+Props.get("auth.whitelist", ""))
-    logger.info("Request: " + request.getRemoteAddr())
     if (request.getMethod().toUpperCase() != "OPTIONS" && Props.getBool("auth.enable", false) && !isInWhiteList) {
       if (!session.contains("user_id") && !request.getPathInfo().equals("/auth")) {
+        logger.info("WhiteList: " + Props.get("auth.whitelist", ""))
+        logger.info("Request: " + request.getRemoteAddr())
         halt(401)
       }
     }
