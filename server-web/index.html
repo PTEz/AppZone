@@ -13,6 +13,7 @@
     <ul id="app-list"></ul>
     <div id="app-feedback"></div>
     <ul id="feedbacks"></ul>
+    <div id="login"></div>
   </div>
 
   <!-- Templates -->
@@ -68,10 +69,20 @@
     <hr />
   </script>
 
+  <script type="text/template" id="login-template">
+    <form class="login">
+      <input type="text" id="username" name="username" />
+      <input type="password" id="password" name="password" />
+      <input class="submit" type="submit" value="Login" />
+    </form>
+    <hr />
+  </script>
+
   <!-- TODO: make script to remove all them and add as one minified one for production -->
   <script src="js/zepto.js"></script>
   <script src="js/underscore.js"></script>
   <script src="js/backbone.js"></script>
+  <script src="js/base64.js"></script>
   <script src="js/appzone.js"></script>
   <script src="js/moment.js"></script>
 </body>

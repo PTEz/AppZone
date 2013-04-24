@@ -34,10 +34,36 @@ import com.dd.plist.PropertyListParser
 import com.dd.plist.NSDictionary
 import java.util.zip.ZipFile
 import java.util.zip.ZipEntry
+import net.liftweb.json.JObject
 
-class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelpers with FileUploadSupport with CorsSupport {
+class AppZoneServlet extends ScalatraServlet with ScalateSupport with AuthenticationSupport
+with JsonHelpers with FileUploadSupport with CorsSupport {
   val DEFAULT_RELEASE = "_default"
 
+  before() {
+    contentType = "application/json"
+
+    if (request.getMethod().toUpperCase() != "OPTIONS" && Props.getBool("auth.enable", false)) {
+      val user = {
+        if (session.contains("user_id")) {
+          Some(User(session.getAttribute("user_id").toString()))
+        } else {
+          None
+        }
+      }.orElse(basicAuth)
+      if (user == None) {
+        logOut()
+        authenticate()
+      } else {
+        session.setAttribute("user_id", user.get.id);
+      }
+    }
+  }
+  
+  get("/auth") {
+	  Json(new JObject(Nil))
+  }
+  
   ////////
   // /apps
   ////////
@@ -260,7 +286,7 @@ class AppZoneServlet extends ScalatraServlet with ScalateSupport with JsonHelper
   }
 
   // For CORS
-  options("*") { handlePreflightRequest() }
+  options("/*") { handlePreflightRequest() }
 
   notFound {
     // remove content type in case it was set through an action

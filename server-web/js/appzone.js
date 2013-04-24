@@ -1,6 +1,27 @@
-/*global Backbone,_ */
+/*global Backbone,_ ,Base64*/
 (function() {
-var SERVER = 'http://appzone-api.idcf.prd.nbu.ca.local/';
+var SERVER = 'http://localhost:8081/';
+var Auth = {
+  get: function() {
+    return window.localStorage.getItem('auth_token');
+  },
+  set: function(token) {
+    window.localStorage.setItem('auth_token', token);
+  }
+};
+
+$(document).on('ajaxError', function(e, xhr, options){
+  if (xhr.status === 401) {
+    window.AppRouter.navigate('login', {trigger: true});
+  }
+});
+$(document).on('ajaxBeforeSend', function(e, xhr, options){
+  if (Auth.get()) {
+    xhr.setRequestHeader('Authorization', 'Basic ' + Auth.get());
+    xhr.withCredentials = true;
+  }
+});
+
 var AppItem = Backbone.Model.extend({
   url: function() { return SERVER + 'app/' + this.id; },
   clear: function() {
@@ -216,6 +237,50 @@ var AppView = Backbone.View.extend({
   }
 });
 
+var LoginView = Backbone.View.extend({
+  el: $('#login'),
+  events: {
+    'submit form': 'login'
+  },
+  initialize: function() {
+    $('#login').html(_.template($('#login-template').html()));
+    this.render();
+  },
+  destroy: function() {
+    $('#login').children().remove();
+  },
+  login: function() {
+    alert('hello');
+    var username = $('input#username').val();
+    var password = $('input#password').val();
+
+    Auth.set(Base64.encode(username + ':' + password));
+
+    $.ajax({
+      type: 'GET',
+      url: SERVER + 'auth',
+      dataType: 'json',
+      global: false,
+      beforeSend: function(xhr) {
+        xhr.setRequestHeader('Authorization', 'Basic ' + Auth.get());
+      },
+      success: function(){
+        alert('success');
+        window.AppRouter.navigate('', {trigger:true});
+      },
+      ajaxError: function() {
+        alert('failed');
+        Auth.set(undefined);
+      },
+      error: function(){
+        alert('failed');
+        Auth.set(undefined);
+      }
+    });
+    return false;
+  }
+});
+
 //////
 // Router
 //////
@@ -223,13 +288,17 @@ var AppRouter = Backbone.Router.extend({
   current: undefined,
   routes: {
     '': 'index',
-    'app/:id' : 'app'
+    'app/:id' : 'app',
+    'login': 'login'
   },
   index: function() {
     this.show(new AppsView());
   },
   app: function(id) {
     this.show(new AppView({id: id}));
+  },
+  login: function() {
+    this.show(new LoginView());
   },
   show: function(view) {
     if (this.current && this.current.destroy) {

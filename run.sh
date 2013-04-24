@@ -3,7 +3,7 @@
 function usage(){
     echo "Usage : $0 start [skipbuild]"
     echo ""
-    echo "        Edit prop.properties for configuration of ports and domain"
+    echo "        Edit run.properties for configuration of ports and domain"
     exit
 }
 
@@ -29,6 +29,11 @@ start)
     echo "mongo.host=$mongo_host" > $PROPS_FILE
     echo "mongo.port=$mongo_port" >> $PROPS_FILE
     echo "mongo.db=$mongo_db" >> $PROPS_FILE
+
+    echo "auth.enable=$auth_enable" >> $PROPS_FILE
+    echo "auth.source=$auth_source" >> $PROPS_FILE
+    echo "auth.ldap.url=$auth_ldap_url" >> $PROPS_FILE
+    echo "auth.ldap.principal=$auth_ldap_principal" >> $PROPS_FILE
 
     if [ "$2" != "skipbuild" ]
     then
