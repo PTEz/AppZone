@@ -45,24 +45,22 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
     contentType = "application/json"
     val isInWhiteList = Props.get("auth.whitelist", "").split(",").contains(request.getRemoteAddr())
     if (request.getMethod().toUpperCase() != "OPTIONS" && Props.getBool("auth.enable", false) && !isInWhiteList) {
-      val user = {
-        if (session.contains("user_id")) {
-          Some(User(session.getAttribute("user_id").toString()))
-        } else {
-          None
-        }
-      }.orElse(basicAuth)
-      if (user == None) {
-        logOut()
-        authenticate()
-      } else {
-        session.setAttribute("user_id", user.get.id);
+      if (!session.contains("user_id") && !request.getPathInfo().equals("/auth")) {
+        halt(401)
       }
     }
   }
   
-  get("/auth") {
-	  Json(new JObject(Nil))
+  post("/auth") {
+	Json(new JObject(Nil))
+	val username = params.get("username").orElse(Option("")).get.toString()
+    val password = params.get("password").orElse(Option("")).get.toString()
+  
+    if (loginLdap(username, password)) {
+      session.setAttribute("user_id", username);	    
+    } else {
+      halt(401)
+    }
   }
   
   ////////

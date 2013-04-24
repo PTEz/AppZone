@@ -22,7 +22,6 @@ libraryDependencies ++= Seq(
   "net.liftweb" %% "lift-json-ext" % "2.5-M1",
   "org.scalatra" % "scalatra" % "2.1.1",
   "org.scalatra" % "scalatra-scalate" % "2.1.1",
-  "org.scalatra" % "scalatra-auth" % "2.1.1",
   "org.scalatra" % "scalatra-scalatest" % "2.1.1" % "test",
   "org.scalatra" % "scalatra-specs2" % "2.1.1" % "test",
   "ch.qos.logback" % "logback-classic" % "1.0.11" % "runtime",

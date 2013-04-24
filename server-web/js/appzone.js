@@ -1,14 +1,6 @@
-/*global Backbone,_ ,Base64*/
+/*global Backbone,_ */
 (function() {
 var SERVER = 'http://localhost:8081/';
-var Auth = {
-  get: function() {
-    return window.localStorage.getItem('auth_token');
-  },
-  set: function(token) {
-    window.localStorage.setItem('auth_token', token);
-  }
-};
 
 $(document).on('ajaxError', function(e, xhr, options){
   if (xhr.status === 401) {
@@ -16,10 +8,7 @@ $(document).on('ajaxError', function(e, xhr, options){
   }
 });
 $(document).on('ajaxBeforeSend', function(e, xhr, options){
-  if (Auth.get()) {
-    xhr.setRequestHeader('Authorization', 'Basic ' + Auth.get());
-    xhr.withCredentials = true;
-  }
+  xhr.withCredentials = true;
 });
 
 var AppItem = Backbone.Model.extend({
@@ -253,22 +242,21 @@ var LoginView = Backbone.View.extend({
     var username = $('input#username').val();
     var password = $('input#password').val();
 
-    Auth.set(Base64.encode(username + ':' + password));
     $('label.error').text('');
 
     var error = function() {
       $('label.error').text('Login failed');
       $('input#password').val('');
-      Auth.set(undefined);
     };
 
     $.ajax({
-      type: 'GET',
+      type: 'POST',
       url: SERVER + 'auth',
       dataType: 'json',
+      data: { username: username, password: password },
       global: false,
       beforeSend: function(xhr) {
-        xhr.setRequestHeader('Authorization', 'Basic ' + Auth.get());
+        xhr.withCredentials = true;
       },
       success: function(){
         window.AppRouter.navigate('', {trigger:true});
