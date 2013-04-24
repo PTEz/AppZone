@@ -9,15 +9,15 @@ import org.slf4j.LoggerFactory
 
 trait AuthenticationSupport {
   val logger = LoggerFactory.getLogger(getClass)
-  
+
   def loginLdap(username: String, password: String): Boolean = {
     try {
-	  val env: Hashtable[String, String] = new Hashtable[String, String]()
+      val env: Hashtable[String, String] = new Hashtable[String, String]()
       env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
       env.put(Context.PROVIDER_URL, Props.get("auth.ldap.url", null))
 
       env.put(Context.SECURITY_AUTHENTICATION, "simple")
-      env.put(Context.SECURITY_PRINCIPAL, Props.get("auth.ldap.principal", null) format(username))
+      env.put(Context.SECURITY_PRINCIPAL, Props.get("auth.ldap.principal", null) format (username))
       env.put(Context.SECURITY_CREDENTIALS, password)
 
       val ctx: DirContext = new InitialDirContext(env)
@@ -25,13 +25,13 @@ trait AuthenticationSupport {
 
       if (ctx != null)
         ctx.close()
-        
+
       result
-	} catch {
-	  case e:Exception => {
-	    logger.info("LDAP login failure", e)
-	    false
-	  }
-	}
+    } catch {
+      case e: Exception => {
+        logger.info("LDAP login failure for " + username + ": " + e.getMessage())
+        false
+      }
+    }
   }
 }
