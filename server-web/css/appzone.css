@@ -139,3 +139,8 @@ div.app {
 	width: 100%;
 	max-width: 400px;
 }
+label.error {
+	display: inline;
+	margin-left: 10px;
+	color: #ff3333;
+}

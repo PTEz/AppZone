@@ -250,11 +250,17 @@ var LoginView = Backbone.View.extend({
     $('#login').children().remove();
   },
   login: function() {
-    alert('hello');
     var username = $('input#username').val();
     var password = $('input#password').val();
 
     Auth.set(Base64.encode(username + ':' + password));
+    $('label.error').text('');
+
+    var error = function() {
+      $('label.error').text('Login failed');
+      $('input#password').val('');
+      Auth.set(undefined);
+    };
 
     $.ajax({
       type: 'GET',
@@ -265,17 +271,10 @@ var LoginView = Backbone.View.extend({
         xhr.setRequestHeader('Authorization', 'Basic ' + Auth.get());
       },
       success: function(){
-        alert('success');
         window.AppRouter.navigate('', {trigger:true});
       },
-      ajaxError: function() {
-        alert('failed');
-        Auth.set(undefined);
-      },
-      error: function(){
-        alert('failed');
-        Auth.set(undefined);
-      }
+      ajaxError: error,
+      error: error
     });
     return false;
   }
