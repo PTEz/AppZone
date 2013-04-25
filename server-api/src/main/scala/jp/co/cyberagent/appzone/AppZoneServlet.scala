@@ -236,7 +236,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
         response.setHeader("Content-Type", "text/xml")
         val content = Source.fromInputStream(file.getInputStream).getLines().mkString("\n")
         val url = request.getRequestURL.toString
-        val contentNew = """<string>.*\.ipa</string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf("/")) + "/ipa</string>")
+        val contentNew = """<string>.*[\.\/]ipa<\/string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf("/")) + "/ipa</string>")
         val input = new ByteArrayInputStream(contentNew.getBytes("UTF-8"))
         org.scalatra.util.io.copy(input, response.getOutputStream)
       } else {
