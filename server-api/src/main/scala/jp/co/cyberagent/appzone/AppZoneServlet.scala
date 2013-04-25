@@ -32,8 +32,15 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
     } else {
       request.getRemoteAddr
     }
+
     val isInWhiteList = Props.get("auth.whitelist", "").split(",").exists(entry => {
-      remoteAddr.equals(entry) || (entry.contains("/") && new SubnetUtils(entry).getInfo.isInRange(remoteAddr))
+      try {
+        remoteAddr.equals(entry) || (entry.contains("/") && new SubnetUtils(entry).getInfo.isInRange(remoteAddr))
+      } catch {
+        case e: Exception =>
+          logger.info("Error while checking whitelist: " + e.getMessage)
+          false
+      }
     })
     if (request.getMethod.toUpperCase != "OPTIONS" && Props.getBool("auth.enable", defVal = false) && !isInWhiteList) {
       if (!session.contains("user_id") && !request.getPathInfo.equals("/auth")) {
