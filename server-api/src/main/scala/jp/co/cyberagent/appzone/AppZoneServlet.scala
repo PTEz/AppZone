@@ -44,7 +44,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
     })
     if (request.getMethod.toUpperCase != "OPTIONS" && Props.getBool("auth.enable", defVal = false) && !isInWhiteList) {
       if (!session.contains("user_id") && !request.getPathInfo.equals("/auth")) {
-        logger.info("Unauthorized access from: " + remoteAddr)
+        logger.info("Not authenticated access from: " + remoteAddr)
         halt(401)
       }
     }
@@ -247,7 +247,6 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
         val contentNew = """<string>.*[\.\/]ipa<\/string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf("/")) + "/ipa</string>")
         val input = new ByteArrayInputStream(contentNew.getBytes("UTF-8"))
         org.scalatra.util.io.copy(input, response.getOutputStream)
-        logger.info("X-Real-Uri: " + request.getHeader("X-Real-Uri"))
       } else {
         resourceNotFound()
       }
