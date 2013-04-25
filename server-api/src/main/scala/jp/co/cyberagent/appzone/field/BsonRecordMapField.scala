@@ -24,7 +24,7 @@ class BsonRecordMapField[OwnerType <: BsonRecord[OwnerType], SubRecordType <: Bs
   override def asDBObject: DBObject = {
     val javaMap = new HashMap[String, DBObject]()
     for ((key, element) <- value) {
-      javaMap.put(key.asInstanceOf[String], element.asDBObject)
+      javaMap.put(key, element.asDBObject)
     }
     val dbl = new BasicDBObject(javaMap)
     dbl

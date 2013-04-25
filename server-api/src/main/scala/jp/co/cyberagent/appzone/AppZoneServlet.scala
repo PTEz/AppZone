@@ -3,41 +3,21 @@ package jp.co.cyberagent.appzone
 import org.scalatra._
 import org.scalatra.servlet.FileUploadSupport
 import scalate.ScalateSupport
-import net.liftweb.common.Empty
-import net.liftweb.common.Full
-import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.mongodb.MongoDB
 import net.liftweb.mongodb.DefaultMongoIdentifier
 import net.liftweb.mongodb.Upsert
-import com.mongodb._
-import com.mongodb.BasicDBObjectBuilder
 import com.mongodb.gridfs.GridFS
-import java.io.FileWriter
-import java.io.FileOutputStream
-import java.io.File
-import java.util.Date
-import net.liftweb.util.Props
 import org.scalatra.BadRequest
 import java.io.InputStream
 import org.scalatra.servlet.FileItem
-import net.liftweb.http.RedirectResponse
 import java.net.URLEncoder
 import java.lang.String
 import java.io.ByteArrayInputStream
 import scala.io.Source
 import net.liftweb.common.Full
-import scala.collection.mutable.HashMap
-import com.mongodb.DBObject
-import net.liftweb.json.JObject
-import com.dd.plist.PropertyListParser
-import com.dd.plist.NSDictionary
-import java.util.zip.ZipFile
-import java.util.zip.ZipEntry
 import net.liftweb.json.JObject
 import net.liftweb.util.Props
-import org.slf4j.LoggerFactory
-import org.apache.commons.lang3.StringUtils
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with AuthenticationSupport
 with JsonHelpers with FileUploadSupport with CorsSupport {
@@ -46,14 +26,14 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   before() {
     contentType = "application/json"
     val remoteAddrHeader = request.getHeader("X-Real-IP")
-    val remoteAddr = if (request.getRemoteAddr() == "127.0.0.1" && !StringUtils.isEmpty(remoteAddrHeader)) {
+    val remoteAddr = if (request.getRemoteAddr == "127.0.0.1" && remoteAddrHeader != null) {
       remoteAddrHeader
     } else {
-      request.getRemoteAddr()
+      request.getRemoteAddr
     }
-    val isInWhiteList = Props.get("auth.whitelist", "").split(",").contains(remoteAddr)
-    if (request.getMethod().toUpperCase() != "OPTIONS" && Props.getBool("auth.enable", false) && !isInWhiteList) {
-      if (!session.contains("user_id") && !request.getPathInfo().equals("/auth")) {
+    val isInWhiteList = Props.get("auth.whitelist", "").split(",").exists(entry => remoteAddr.startsWith(entry))
+    if (request.getMethod.toUpperCase != "OPTIONS" && Props.getBool("auth.enable", defVal = false) && !isInWhiteList) {
+      if (!session.contains("user_id") && !request.getPathInfo.equals("/auth")) {
         halt(401)
       }
     }
@@ -61,11 +41,11 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   
   post("/auth") {
 	Json(new JObject(Nil))
-	val username = params.get("username").orElse(Option("")).get.toString()
-    val password = params.get("password").orElse(Option("")).get.toString()
+	val username = params.get("username").orElse(Option("")).get.toString
+    val password = params.get("password").orElse(Option("")).get.toString
   
     if (loginLdap(username, password)) {
-      session.setAttribute("user_id", username);	    
+      session.setAttribute("user_id", username)
     } else {
       halt(401)
     }
@@ -75,7 +55,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   // /apps
   ////////
   get("/apps") {
-    Json(App.findAll.sortBy(app => app.name.get.toLowerCase()).map(p => p.asJValue))
+    Json(App.findAll.sortBy(app => app.name.get.toLowerCase).map(p => p.asJValue))
   }
 
   get("/app/:id") {
@@ -119,8 +99,8 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
       if (file != null) {
         response.setHeader("Content-Type", "application/vnd.android.package-archive")
         response.setHeader("Content-Disposition", "attachment; filename=\"" + appId + "-" + releaseId + ".apk\"")
-        response.setHeader("Content-Length", file.getLength().toString)
-        org.scalatra.util.io.copy(file.getInputStream(), response.getOutputStream)
+        response.setHeader("Content-Length", file.getLength.toString)
+        org.scalatra.util.io.copy(file.getInputStream, response.getOutputStream)
       } else {
         resourceNotFound()
       }
@@ -181,7 +161,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   def publishIOs(appId: String, releaseId: String) = {
     fileParams.get("ipa") match {
       case Some(ipaFile) =>
-        val manifest = new IOSManifestBuilder(ipaFile).createManifest(request.getRequestURL().toString + "/ipa")
+        val manifest = new IOSManifestBuilder(ipaFile).createManifest(request.getRequestURL.toString + "/ipa")
         /// new code
         // TODO store created manifest instead of fileParam
         ///
@@ -198,8 +178,8 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
       val releaseList = resList(app)
       val record: AppPlatformEntry = releaseList.getRelease(releaseId).openOr(AppPlatformEntry.createRecord)
       record.version.set(params.getOrElse("version", "NOT SET"))
-      record.incrementVersionCode
-      record.setDateToNow
+      record.incrementVersionCode()
+      record.setDateToNow()
       params.get("changelog") match {
         case Some(changelog) => record.addChangeLog(new String(changelog.getBytes("iso-8859-1"), "UTF-8"))
         case _ =>
@@ -217,15 +197,15 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   }
 
   get("/app/:id/ios") {
-    getIOsItmsServices(params("id"), DEFAULT_RELEASE)
+    redirectIOsItmsServices(params("id"), DEFAULT_RELEASE)
   }
 
   get("/app/:id/ios/:releaseId") {
-    getIOsItmsServices(params("id"), params("releaseId"))
+    redirectIOsItmsServices(params("id"), params("releaseId"))
   }
 
-  def getIOsItmsServices(appId: String, releaseId: String) = {
-    val url = URLEncoder.encode(request.getRequestURL().toString() + "/manifest", "UTF-8");
+  def redirectIOsItmsServices(appId: String, releaseId: String) {
+    val url = URLEncoder.encode(request.getRequestURL.toString + "/manifest", "UTF-8")
     redirect("itms-services://?action=download-manifest&url=" + url)
   }
 
@@ -243,10 +223,10 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
       val file = fs.findOne(appId + "/ios-" + releaseId + ".manifest")
       if (file != null) {
         response.setHeader("Content-Type", "text/xml")
-        val content = Source.fromInputStream(file.getInputStream()).getLines.mkString("\n")
-        val url = request.getRequestURL().toString
+        val content = Source.fromInputStream(file.getInputStream).getLines().mkString("\n")
+        val url = request.getRequestURL.toString
         val contentNew = """<string>.*\.ipa</string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf("/")) + "/ipa</string>")
-        val input = new ByteArrayInputStream(contentNew.getBytes("UTF-8"));
+        val input = new ByteArrayInputStream(contentNew.getBytes("UTF-8"))
         org.scalatra.util.io.copy(input, response.getOutputStream)
       } else {
         resourceNotFound()
@@ -269,8 +249,8 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
       if (file != null) {
         response.setHeader("Content-Type", "application/octet-stream")
         response.setHeader("Content-Disposition", "attachment; filename=\"" + appId + ".ipa\"")
-        response.setHeader("Content-Length", file.getLength().toString)
-        org.scalatra.util.io.copy(file.getInputStream(), response.getOutputStream)
+        response.setHeader("Content-Length", file.getLength.toString)
+        org.scalatra.util.io.copy(file.getInputStream, response.getOutputStream)
       } else {
         resourceNotFound()
       }
@@ -315,7 +295,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
       val inputFile = fs.createFile(manifest)
       inputFile.setFilename(fileName)
       inputFile.setContentType(contentType)
-      inputFile.save
+      inputFile.save()
     }
   }
 
@@ -324,7 +304,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
     feedbackRecord.appId.set(id)
     feedbackRecord.appType.set(appType)
     feedbackRecord.feedback.set(feedback)
-    feedbackRecord.setDateToNow
+    feedbackRecord.setDateToNow()
     feedbackRecord.save
     Json(feedbackRecord.asJValue)
   }

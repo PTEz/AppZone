@@ -1,4 +1,3 @@
-import jp.co.cyberagent.appzone._
 import org.scalatra._
 import javax.servlet.ServletContext
 import com.mongodb.Mongo
@@ -14,12 +13,12 @@ import net.liftweb.util.Props
  */
 class Scalatra extends LifeCycle {
   override def init(context: ServletContext) {
-    configureMongoDb
+    configureMongoDb()
     // Mount one or more servlets
     // context.mount(new AppZoneServlet, "/*")
   }
 
-  def configureMongoDb = {
+  def configureMongoDb() {
     val srvr = new ServerAddress(
       Props.get("mongo.host", "127.0.0.1"),
       Props.getInt("mongo.port", 27017))

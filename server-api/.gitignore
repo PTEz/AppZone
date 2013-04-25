@@ -8,3 +8,7 @@ target/
 
 # generated props file
 src/main/resources/props
+
+#intellij
+.idea/
+.idea_modules/

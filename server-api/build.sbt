@@ -27,6 +27,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.0.11" % "runtime",
   "com.googlecode.plist" % "dd-plist" % "1.0",
   "org.apache.commons" % "commons-io" % "1.3.2",
+  "commons-net" % "commons-net" % "3.2",
   "org.eclipse.jetty" % "jetty-webapp" % "8.1.7.v20120910" % "compile;container",
   "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "compile;container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar"))
 )

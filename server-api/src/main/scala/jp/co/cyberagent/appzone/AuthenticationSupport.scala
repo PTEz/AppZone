@@ -29,7 +29,7 @@ trait AuthenticationSupport {
       result
     } catch {
       case e: Exception => {
-        logger.info("LDAP login failure for " + username + ": " + e.getMessage())
+        logger.info("LDAP login failure for " + username + ": " + e.getMessage)
         false
       }
     }

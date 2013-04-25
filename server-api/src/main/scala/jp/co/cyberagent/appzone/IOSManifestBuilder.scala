@@ -7,7 +7,6 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipEntry
 import com.dd.plist.PropertyListParser
 import com.dd.plist.NSDictionary
-import org.apache.commons.io.FileUtils
 import java.io.ByteArrayInputStream
 
 class IOSManifestBuilder(ipaFile: FileItem) {
@@ -18,9 +17,9 @@ class IOSManifestBuilder(ipaFile: FileItem) {
     val entries = zip.entries()
 
     var entry: ZipEntry = null
-    while (entries.hasMoreElements() && entry == null) {
+    while (entries.hasMoreElements && entry == null) {
       val element = entries.nextElement()
-      if (element.getName().toLowerCase().endsWith("/info.plist")) {
+      if (element.getName.toLowerCase.endsWith("/info.plist")) {
         entry = element
       }
     }
@@ -29,17 +28,17 @@ class IOSManifestBuilder(ipaFile: FileItem) {
     val rootDict = PropertyListParser.parse(plistInputStream).asInstanceOf[NSDictionary]
     val manifest = IOSManifestBuilder.getManifestTemplate
       .replace("${url}", url)
-      .replace("${CFBundleName}", rootDict.objectForKey("CFBundleName").toString())
-      .replace("${CFBundleIdentifier}", rootDict.objectForKey("CFBundleIdentifier").toString())
-      .replace("${CFBundleShortVersionString}", rootDict.objectForKey("CFBundleShortVersionString").toString() + " (" + rootDict.objectForKey("CFBundleVersion").toString() + ")")
+      .replace("${CFBundleName}", rootDict.objectForKey("CFBundleName").toString)
+      .replace("${CFBundleIdentifier}", rootDict.objectForKey("CFBundleIdentifier").toString)
+      .replace("${CFBundleShortVersionString}", rootDict.objectForKey("CFBundleShortVersionString").toString + " (" + rootDict.objectForKey("CFBundleVersion").toString + ")")
 
-    new ByteArrayInputStream(manifest.getBytes())
+    new ByteArrayInputStream(manifest.getBytes)
   }
 }
 
 object IOSManifestBuilder {
   val IOS_MANIFEST_TEMPLATE = new File(getClass.getResource("/OTAManifestTemplate.plist").toURI())
-  def getManifestTemplate(): String = {
+  def getManifestTemplate: String = {
     scala.io.Source.fromFile(IOS_MANIFEST_TEMPLATE).mkString
   }
 }
