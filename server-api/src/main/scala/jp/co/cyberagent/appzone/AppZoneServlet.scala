@@ -172,7 +172,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   def publishIOs(appId: String, releaseId: String) = {
     fileParams.get("ipa") match {
       case Some(ipaFile) =>
-        val manifest = new IOSManifestBuilder(ipaFile).createManifest(request.getRequestURL.toString + "/ipa")
+        val manifest = new IOSManifestBuilder(ipaFile).createManifest(getRequestUrl + "/ipa")
         /// new code
         // TODO store created manifest instead of fileParam
         ///
@@ -216,8 +216,16 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   }
 
   def redirectIOsItmsServices(appId: String, releaseId: String) {
-    val url = URLEncoder.encode(request.getRequestURL.toString + "/manifest", "UTF-8")
+    val url = URLEncoder.encode(getRequestUrl + "/manifest", "UTF-8")
     redirect("itms-services://?action=download-manifest&url=" + url)
+  }
+
+  def getRequestUrl = {
+    if (request.getHeader("X-Real-Uri") != null) {
+      request.getHeader("X-Real-Uri")
+    } else {
+      request.getRequestURL.toString
+    }
   }
 
   get("/app/:id/ios/manifest") {
@@ -235,10 +243,11 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
       if (file != null) {
         response.setHeader("Content-Type", "text/xml")
         val content = Source.fromInputStream(file.getInputStream).getLines().mkString("\n")
-        val url = request.getRequestURL.toString
+        val url = getRequestUrl
         val contentNew = """<string>.*[\.\/]ipa<\/string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf("/")) + "/ipa</string>")
         val input = new ByteArrayInputStream(contentNew.getBytes("UTF-8"))
         org.scalatra.util.io.copy(input, response.getOutputStream)
+        logger.info("X-Real-Uri: " + request.getHeader("X-Real-Uri"))
       } else {
         resourceNotFound()
       }
