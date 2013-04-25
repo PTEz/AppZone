@@ -18,6 +18,7 @@ import scala.io.Source
 import net.liftweb.common.Full
 import net.liftweb.json.JObject
 import net.liftweb.util.Props
+import org.apache.commons.net.util.SubnetUtils
 
 class AppZoneServlet extends ScalatraServlet with ScalateSupport with AuthenticationSupport
 with JsonHelpers with FileUploadSupport with CorsSupport {
@@ -31,7 +32,9 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
     } else {
       request.getRemoteAddr
     }
-    val isInWhiteList = Props.get("auth.whitelist", "").split(",").exists(entry => remoteAddr.startsWith(entry))
+    val isInWhiteList = Props.get("auth.whitelist", "").split(",").exists(entry => {
+      remoteAddr.equals(entry) || (entry.contains("/") && new SubnetUtils(entry).getInfo.isInRange(remoteAddr))
+    })
     if (request.getMethod.toUpperCase != "OPTIONS" && Props.getBool("auth.enable", defVal = false) && !isInWhiteList) {
       if (!session.contains("user_id") && !request.getPathInfo.equals("/auth")) {
         halt(401)
@@ -40,8 +43,8 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   }
   
   post("/auth") {
-	Json(new JObject(Nil))
-	val username = params.get("username").orElse(Option("")).get.toString
+  Json(new JObject(Nil))
+  val username = params.get("username").orElse(Option("")).get.toString
     val password = params.get("password").orElse(Option("")).get.toString
   
     if (loginLdap(username, password)) {
