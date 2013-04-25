@@ -216,7 +216,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   }
 
   def redirectIOsItmsServices(appId: String, releaseId: String) {
-    val url = URLEncoder.encode(getRequestUrl + "/manifest", "UTF-8")
+    val url = URLEncoder.encode(getRequestUrl.replace("https", "http") + "/manifest", "UTF-8")
     redirect("itms-services://?action=download-manifest&url=" + url)
   }
 
@@ -243,7 +243,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
       if (file != null) {
         response.setHeader("Content-Type", "text/xml")
         val content = Source.fromInputStream(file.getInputStream).getLines().mkString("\n")
-        val url = getRequestUrl
+        val url = getRequestUrl.replace("https", "http")
         val contentNew = """<string>.*[\.\/]ipa<\/string>""".r.replaceFirstIn(content, "<string>" + url.substring(0, url.lastIndexOf("/")) + "/ipa</string>")
         val input = new ByteArrayInputStream(contentNew.getBytes("UTF-8"))
         org.scalatra.util.io.copy(input, response.getOutputStream)
