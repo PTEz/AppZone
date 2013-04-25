@@ -33,7 +33,7 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
       request.getRemoteAddr
     }
     val isInWhiteList = Props.get("auth.whitelist", "").split(",").exists(entry => {
-      remoteAddr.equals(entry) || (remoteAddr.contains("/") && new SubnetUtils(entry).getInfo.isInRange(remoteAddr))
+      remoteAddr.equals(entry) || (entry.contains("/") && new SubnetUtils(entry).getInfo.isInRange(remoteAddr))
     })
     if (request.getMethod.toUpperCase != "OPTIONS" && Props.getBool("auth.enable", defVal = false) && !isInWhiteList) {
       if (!session.contains("user_id") && !request.getPathInfo.equals("/auth")) {
