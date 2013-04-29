@@ -10,6 +10,13 @@ import org.slf4j.LoggerFactory
 trait AuthenticationSupport {
   val logger = LoggerFactory.getLogger(getClass)
 
+  def doAuth(username: String, password: String): Boolean = {
+    Props.get("auth.source", "").toLowerCase match {
+      case "ldap" => loginLdap(username, password)
+      case _ => false
+    }
+  }
+
   def loginLdap(username: String, password: String): Boolean = {
     var success = false
     var errors: List[Exception] = Nil
