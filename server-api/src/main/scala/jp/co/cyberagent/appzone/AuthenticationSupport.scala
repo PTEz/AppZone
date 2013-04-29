@@ -12,9 +12,15 @@ trait AuthenticationSupport {
 
   def doAuth(username: String, password: String): Boolean = {
     Props.get("auth.source", "").toLowerCase match {
+      case "simple" => loginSimple(username, password)
       case "ldap" => loginLdap(username, password)
       case _ => false
     }
+  }
+
+  def loginSimple(username: String, password: String): Boolean = {
+    username == Props.get("auth.simple.username", null) &&
+      password == Props.get("auth.simple.password", null)
   }
 
   def loginLdap(username: String, password: String): Boolean = {
