@@ -11,27 +11,57 @@ trait AuthenticationSupport {
   val logger = LoggerFactory.getLogger(getClass)
 
   def loginLdap(username: String, password: String): Boolean = {
-    try {
-      val env: Hashtable[String, String] = new Hashtable[String, String]()
-      env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
-      env.put(Context.PROVIDER_URL, Props.get("auth.ldap.url", null))
+    var success = false
+    var errors: List[Exception] = Nil
 
-      env.put(Context.SECURITY_AUTHENTICATION, "simple")
-      env.put(Context.SECURITY_PRINCIPAL, Props.get("auth.ldap.principal", null) format (username))
-      env.put(Context.SECURITY_CREDENTIALS, password)
+    def tryLoginLdap(base: String): Boolean = {
+      try {
+        val env: Hashtable[String, String] = new Hashtable[String, String]()
 
-      val ctx: DirContext = new InitialDirContext(env)
-      val result = ctx != null
+        val url: String = Props.get(base + ".url", null)
+        val principal: String = Props.get(base + ".principal", null) format (username)
 
-      if (ctx != null)
-        ctx.close()
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
+        env.put(Context.PROVIDER_URL, url)
 
-      result
-    } catch {
-      case e: Exception => {
-        logger.info("LDAP login failure for " + username + ": " + e.getMessage)
-        false
+        env.put(Context.SECURITY_AUTHENTICATION, "simple")
+        env.put(Context.SECURITY_PRINCIPAL, principal)
+        env.put(Context.SECURITY_CREDENTIALS, password)
+
+        val ctx: DirContext = new InitialDirContext(env)
+        val result = ctx != null
+
+        if (ctx != null)
+          ctx.close()
+
+        result
+      } catch {
+        case e: Exception => {
+          errors = e :: errors
+          false
+        }
       }
     }
+
+    // Trying to log in
+    for (i <- 0 to 5) {
+      val base = if (i == 0) {
+        "auth.ldap"
+      } else {
+        "auth.ldap." + i
+      }
+
+      if (Props.props.contains(base + ".url")) {
+        success = tryLoginLdap(base)
+      }
+    }
+
+    if (!success) {
+      for (e <- errors) {
+        logger.info("LDAP login failure for " + username + ": " + e.getMessage)
+      }
+    }
+
+    success
   }
 }

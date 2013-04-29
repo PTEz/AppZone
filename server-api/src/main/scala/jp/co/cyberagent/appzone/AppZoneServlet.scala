@@ -54,8 +54,12 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   Json(new JObject(Nil))
   val username = params.get("username").orElse(Option("")).get.toString
     val password = params.get("password").orElse(Option("")).get.toString
-  
-    if (loginLdap(username, password)) {
+
+    val authSuccess = Props.get("auth.source", "").toLowerCase match {
+      case "ldap" => loginLdap(username, password)
+      case _ => false
+    }
+    if (authSuccess) {
       session.setAttribute("user_id", username)
     } else {
       halt(401)
