@@ -51,7 +51,7 @@ class DeployStrategyAndroid extends DeployStrategy {
 
     @Override
     public String getDeployableName() {
-        return getStringFromManifest("android:label");
+        return mApkFile.getName().replace(".apk", "");
     }
 
     private String getStringFromManifest(final String name) {

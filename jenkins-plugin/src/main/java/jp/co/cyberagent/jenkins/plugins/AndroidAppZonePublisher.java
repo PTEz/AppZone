@@ -176,9 +176,13 @@ public class AndroidAppZonePublisher extends Notifier {
                 File propertiesFile = new File(file.getParentFile().getParentFile(),
                         "project.properties");
                 try {
-                    boolean isLibrary = FileUtils.readFileToString(propertiesFile)
-                            .contains("android.library=true");
-                    if (isLibrary) {
+                    if (propertiesFile.exists()) {
+                        boolean isLibrary = FileUtils.readFileToString(propertiesFile)
+                                .contains("android.library=true");
+                        if (isLibrary) {
+                            removeFiles.add(file);
+                        }
+                    } else if (!file.getAbsolutePath().endsWith("/build/apk/" + file.getName())) {
                         removeFiles.add(file);
                     }
                 } catch (Exception e) {
