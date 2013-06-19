@@ -229,13 +229,17 @@ with JsonHelpers with FileUploadSupport with CorsSupport {
   }
 
   def urlToDownloadUrl(url: String) = {
-    val forceDomain = Props.get("https.force_http_download.domain")
-    if (Props.getBool("https.force_http_download", defVal = false) &&
-        (forceDomain == null || url.contains(forceDomain))) {
+    val forceDomain = Props.get("https.forcehttpdownload.domain", defVal = null)
+    val forceHttpEnabled = Props.getBool("https.forcehttpdownload.enable", defVal = false)
+    logger.info("Force: " + forceHttpEnabled + " => " + forceDomain)
+    val use = if (forceHttpEnabled && (forceDomain == null || url.contains(forceDomain))) {
       url.replace("https", "http")
     } else {
       url
     }
+    logger.info("Use: " + use)
+
+    url.replace("https", "http")
   }
 
   get("/app/:id/ios/manifest") {
