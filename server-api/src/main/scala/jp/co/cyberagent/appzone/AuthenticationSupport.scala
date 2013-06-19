@@ -66,7 +66,7 @@ trait AuthenticationSupport {
       }
 
       if (Props.props.contains(base + ".url")) {
-        success = tryLoginLdap(base)
+        success = success || tryLoginLdap(base)
       }
     }
 
