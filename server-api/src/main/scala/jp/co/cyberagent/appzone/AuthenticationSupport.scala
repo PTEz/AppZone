@@ -25,14 +25,14 @@ trait AuthenticationSupport {
 
   def loginLdap(username: String, password: String): Boolean = {
     var success = false
-    var errors: List[Exception] = Nil
+    var errors: List[String] = Nil
 
     def tryLoginLdap(base: String): Boolean = {
+      val url: String = Props.get(base + ".url", null)
+      val principal: String = Props.get(base + ".principal", null) format (username)
+
       try {
         val env: Hashtable[String, String] = new Hashtable[String, String]()
-
-        val url: String = Props.get(base + ".url", null)
-        val principal: String = Props.get(base + ".principal", null) format (username)
 
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
         env.put(Context.PROVIDER_URL, url)
@@ -50,7 +50,8 @@ trait AuthenticationSupport {
         result
       } catch {
         case e: Exception => {
-          errors = e :: errors
+          val message = "LDAP login failure for " + principal + "@" + url + ": " + e.getMessage
+          errors = message :: errors
           false
         }
       }
@@ -71,7 +72,7 @@ trait AuthenticationSupport {
 
     if (!success) {
       for (e <- errors) {
-        logger.info("LDAP login failure for " + username + ": " + e.getMessage)
+        logger.info(e)
       }
     }
 
