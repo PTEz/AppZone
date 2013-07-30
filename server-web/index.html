@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AppZone</title>
+  <meta name="viewport" content="width=device-width">
+  <!-- TODO: minify and make one for production -->
+  <link rel="stylesheet" href="css/base.css"/>
+  <link rel="stylesheet" href="css/appzone.css"/>
+</head>
+<body>
+  <div id="appzoneapp">
+    <h1><a href="/">AppZone</a></h1>
+    <ul id="app-list"></ul>
+    <div id="app-feedback"></div>
+    <ul id="feedbacks"></ul>
+    <div id="login"></div>
+  </div>
+
+  <!-- Templates -->
+
+  <script type="text/template" id="app-template">
+    <div class="app">
+      <label class="name"><a href="#/app/<%- id %>"><%- name %></a></label>
+      <div class="releases">
+        <ul class="android"></ul><ul class="ios"></ul>
+      </div>
+      <div class="delete all">del</div>
+    </div>
+  </script>
+
+  <script type="text/template" id="release-template">
+    <div class="release">
+      <a class="download" href="#">
+        <% if (id !== "_default") { %>
+          <label class="id"><%- id %></label>
+        <% } %>
+        <span class="version"><%- version %></span>
+        <span class="lastUpdateDate"><%- moment(lastUpdateDate).fromNow() %></span>
+        <div class="toggle">&#9660;</div>
+      </a>
+      <div class="detail">
+        <div class="changelog">
+          <a class="changelog-preview"><%= changelogpreview %></a>
+          <div class="changelog-full"><%= changelog.replace(/\n/g, '<br />') %></div>
+        </div>
+        <a class="delete" href="#">Delete</a>
+      </div>
+    </div>
+  </script>
+
+  <script type="text/template" id="feedback-template">
+    <div class="feedback">
+      <label class="date"><%- moment(date).fromNow() %></label>
+      <label class="type"><%- appType %></label>
+      <label class="feedback"><%- feedback %></label>
+    </div>
+  </script>
+
+  <script type="text/template" id="feedback-form-template">
+    <hr />
+    <form class="feedback">
+      <textarea name="feedback" placeholder="Write your feedback..."></textarea>
+      <select name="type">
+        <option value="android">Android</option>
+        <option value="ios">iOS</option>
+      </select>
+      <input class="submit" type="submit" value="Send feedback" />
+    </form>
+    <hr />
+  </script>
+
+  <script type="text/template" id="login-template">
+    <form class="login">
+      <input type="text" id="username" name="username" placeholder="user_name" />
+      <input type="password" id="password" name="password" placeholder="password" />
+      <input class="submit" type="submit" value="Login" /><label class="error"></label>
+    </form>
+    <hr />
+  </script>
+
+  <!-- TODO: make script to remove all them and add as one minified one for production -->
+  <script src="js/zepto.js"></script>
+  <script src="js/underscore.js"></script>
+  <script src="js/backbone.js"></script>
+  <script src="js/appzone.js"></script>
+  <script src="js/moment.js"></script>
+</body>
+</html>
