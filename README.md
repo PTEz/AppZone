@@ -1,9 +1,10 @@
 # NBU AppZone server
 
-## Description
-AppZone provides a simple interface for publishing Android and iOS apps through a simple web interface. Apps can be published on AppZone using simple REST commands or with the jenkins plugin.
+## Descriptionj
 
-For an overview look at [overview.png](overview.png).
+AppZone provides a simple interface for publishing Android and iOS apps through a simple web interface. Apps can be published on AppZone using simple REST commands or with the provided Jenkins plugin.
+
+![Overview](https://raw.github.com/CyberAgent/AppZone/master/overview.png)
 
 ## Requirements
 
