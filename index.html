@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>AppZone by CyberAgent</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>AppZone</h1>
+        <p>Internal AppStore for Android and iOS apps. Supports publish newest builds from Jenkins or API. Supports OTA download and optional authentication with LDAP.</p>
+
+        <p class="view"><a href="https://github.com/CyberAgent/AppZone">View the Project on GitHub <small>CyberAgent/AppZone</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/CyberAgent/AppZone/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/CyberAgent/AppZone/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/CyberAgent/AppZone">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p><img src="https://f.cloud.github.com/assets/1261982/960110/77992526-04ab-11e3-806a-c76d3a6f5603.png" alt="2013-08-14 15 23 22"><img src="https://f.cloud.github.com/assets/1261982/960109/76f4394e-04ab-11e3-8902-03154b3db655.png" alt="2013-08-14 15 30 52"></p>
+
+<h2>
+<a name="description" class="anchor" href="#description"><span class="octicon octicon-link"></span></a>Description</h2>
+
+<p>AppZone provides a simple interface for publishing Android and iOS apps through a simple web interface. Apps can be published on AppZone using simple REST commands or with the provided Jenkins plugin.</p>
+
+<p><img src="https://raw.github.com/CyberAgent/AppZone/master/overview.png" alt="Overview"></p>
+
+<h2>
+<a name="requirements" class="anchor" href="#requirements"><span class="octicon octicon-link"></span></a>Requirements</h2>
+
+<ul>
+<li>mongodb</li>
+</ul><h2>
+<a name="simple-build--run-everything" class="anchor" href="#simple-build--run-everything"><span class="octicon octicon-link"></span></a>Simple build &amp; run everything</h2>
+
+<pre><code>./run.sh start
+</code></pre>
+
+<p>Open your browser at <a href="http://localhost:8080">http://localhost:8080</a>.</p>
+
+<p>To configure domain, ports and mongodb edit run.properties.</p>
+
+<h2>
+<a name="run-the-nicer-way" class="anchor" href="#run-the-nicer-way"><span class="octicon octicon-link"></span></a>Run the nicer way</h2>
+
+<h3>
+<a name="run-api" class="anchor" href="#run-api"><span class="octicon octicon-link"></span></a>Run API</h3>
+
+<p>First you will need a tomcat or jetty server running. The API</p>
+
+<pre><code>cd server-api/
+./sbt package
+cp target/.../...war &lt;your_tomcat&gt;/webapps/appzone.war
+</code></pre>
+
+<p>To configure mongodb, either edit the source, or create a default.props file in src/main/resources/props .</p>
+
+<h3>
+<a name="run-web" class="anchor" href="#run-web"><span class="octicon octicon-link"></span></a>Run WEB</h3>
+
+<p>Edit the SERVER variable at the top of server-web/js/appzone.js to point to your running API. Then serve server-web as a static website. Preferably through nginx. Otherwise you can run:</p>
+
+<pre><code>cd server-web/
+python -m SimpleHTTPServer
+# or: sudo python -m SimpleHTTPServer 80
+</code></pre>
+
+<h2>
+<a name="build--run-in-sbt" class="anchor" href="#build--run-in-sbt"><span class="octicon octicon-link"></span></a>Build &amp; run in sbt</h2>
+
+<pre><code>cd server-api/
+./sbt
+&gt; container:start
+&gt; ~ ;copy-resources;aux-compile
+</code></pre>
+
+<p>Now open the site's <a href="http://localhost:8080/">root page</a> in your browser.</p>
+
+<h2>
+<a name="jenkins-plugin" class="anchor" href="#jenkins-plugin"><span class="octicon octicon-link"></span></a>Jenkins plugin</h2>
+
+<p>Running the following command creates a .hpi file in the target directory, that can be installed in jenkins in the plugin manager (advanced tab).</p>
+
+<pre><code>cd jenkins-plugin
+mvn package
+</code></pre>
+
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<pre><code>Copyright 2013 CyberAgent
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+</code></pre>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/CyberAgent">CyberAgent</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
